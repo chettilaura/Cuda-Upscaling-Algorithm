@@ -137,7 +137,6 @@ GrayImage* readPGM(const char* filename) {
 void writePGM(const char* filename, GrayImage* img)
 {
     FILE* fp;
- 
     fp = fopen(filename, "wb");
     if (!fp) {
         fprintf(stderr, "Unable to open file '%s'\n", filename);

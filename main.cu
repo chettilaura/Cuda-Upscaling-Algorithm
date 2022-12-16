@@ -1,19 +1,24 @@
 #include "imglib/img.h"
 #include <stdio.h>
+#include <helper_cuda.h>
 
-__global__ void superSampler(int *d_imgCenter, int *d_imgLeft, int *d_imgRight, int *d_imgUp, int *d_imgDown, int *d_imgConv, int dimZoom){
+
+/*
+    includere più di un vettore img in un kernel non è possibile, crasha il programma
+*/
+__global__ void superSampler(int *d_imgCenter, /*int *d_imgLeft, int *d_imgRight, int *d_imgUp, int *d_imgDown,*/ int *d_imgConv, int dimZoom){
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
 
     if (i < dimZoom && j < dimZoom)
     {
         int sum = 0;
-        sum += d_imgCenter[i * dimZoom + j] * 4;
-        sum += d_imgLeft[i * dimZoom + j] * -1;
-        sum += d_imgRight[i * dimZoom + j] * -1;
-        sum += d_imgUp[i * dimZoom + j] * -1;
-        sum += d_imgDown[i * dimZoom + j] * -1;
-        d_imgConv[i * dimZoom + j] = sum;
+        //sum += d_imgCenter[i * dimZoom + j] * 4;
+        /*sum += d_imgLeft[j * dimZoom + i] * -1;
+        sum += d_imgRight[j * dimZoom + i] * -1;
+        sum += d_imgUp[j * dimZoom + i] * -1;
+        sum += d_imgDown[j * dimZoom + i] * -1;*/
+        //d_imgConv[i * dimZoom + j] = sum;
     }
 }
 
@@ -100,6 +105,7 @@ int main(int argc, char **argv)
             imgDown->data[i * dimZoom + j] = img->data[pointX + j + (pointY + i + 1) * img->width];
 
 
+    
     int *d_imgCenter, *d_imgLeft, *d_imgRight, *d_imgUp, *d_imgDown, *d_imgConv;
     cudaMalloc((void **)&d_imgCenter, dimZoom * dimZoom * sizeof(int));
     cudaMalloc((void **)&d_imgLeft, dimZoom * dimZoom * sizeof(int));
@@ -116,11 +122,27 @@ int main(int argc, char **argv)
 
     // Convoluzione
     GrayImage *imgConv = createPGM(dimZoom, dimZoom);
-    superSampler<<<1, 10000>>>(d_imgCenter, d_imgLeft, d_imgRight, d_imgUp, d_imgDown, d_imgConv, dimZoom);
 
-    cudaMemcpy(imgConv->data, d_imgConv, dimZoom * dimZoom * sizeof(int), cudaMemcpyDeviceToHost);
+    superSampler<<<1, 1>>>(d_imgCenter, /*d_imgLeft, d_imgRight, d_imgUp, d_imgDown,*/ d_imgConv, dimZoom);
+
+    checkCudaErrors(cudaMemcpy(imgConv->data, d_imgConv, dimZoom * dimZoom * sizeof(int), cudaMemcpyDeviceToHost));
+
     // Stampa
+
     writePGM("output.pgm", imgConv);
     destroyPGM(img);
     destroyPGM(imgCenter);
+    destroyPGM(imgLeft);
+    destroyPGM(imgRight);
+    destroyPGM(imgUp);
+    destroyPGM(imgDown);
+    destroyPGM(imgConv);
+    cudaFree(d_imgCenter);
+    cudaFree(d_imgLeft);
+    cudaFree(d_imgRight);
+    cudaFree(d_imgUp);
+    cudaFree(d_imgDown);
+    cudaFree(d_imgConv);
+
+    return 0;
 }

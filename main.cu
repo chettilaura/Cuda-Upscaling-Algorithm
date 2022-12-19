@@ -1,39 +1,44 @@
 #include "imglib/img.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <helper_cuda.h>
-
 
 /*
     includere più di un vettore img in un kernel non è possibile, crasha il programma
 */
-__global__ void superSampler(int *d_imgCenter, /*int *d_imgLeft, int *d_imgRight, int *d_imgUp, int *d_imgDown,*/ int *d_imgConv, int dimZoom){
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    int j = threadIdx.y + blockIdx.y * blockDim.y;
-
-    if (i < dimZoom && j < dimZoom)
+__global__ void superSampler(int *d_imgCenter, int *d_imgLeft, int *d_imgRight, int *d_imgUp, int *d_imgDown, int *d_imgConv, int dimZoom){
+    //int i = threadIdx.x + blockIdx.x * blockDim.x;
+    //int j = threadIdx.y + blockIdx.y * blockDim.y;
+   /* if (i < dimZoom && j < dimZoom)
     {
         int sum = 0;
         //sum += d_imgCenter[i * dimZoom + j] * 4;
-        /*sum += d_imgLeft[j * dimZoom + i] * -1;
+        sum += d_imgLeft[j * dimZoom + i] * -1;
         sum += d_imgRight[j * dimZoom + i] * -1;
         sum += d_imgUp[j * dimZoom + i] * -1;
-        sum += d_imgDown[j * dimZoom + i] * -1;*/
+        sum += d_imgDown[j * dimZoom + i] * -1;
         //d_imgConv[i * dimZoom + j] = sum;
-    }
+    }*/
 }
 
-int main(int argc, char **argv)
-{
-    int dimX = 250;    // Coordinata centro X maschera per selezione
-    int dimY = 200;    // Coordinata centro Y maschera per selezione
-    int dimZoom = 100; // Dimensione della maschera per selezione
+int main(int argc, char **argv) {
+    int dimX = 0;    // Coordinata centro X maschera per selezione
+    int dimY = 0;    // Coordinata centro Y maschera per selezione
+    int dimZoom = 0; // Dimensione della maschera per selezione
 
     // Inizializzazione
     if (argc != 5)
     {
-        printf("Uso: %s inputFile.? DimX DimY dimZoom", argv[0]);
+        printf("Uso: %s inputFile.? DimX DimY dimZoom\n", argv[0]);
         return -1;
     }
+
+    dimX = (int) strtol(argv[2], NULL, 10);
+    dimY = (int) strtol(argv[3], NULL, 10);
+    dimZoom = (int) strtol(argv[4], NULL, 10);
+
+    printf("DimX: %d, DimY: %d, dimZoom: %d\n", dimX, dimY, dimZoom);
+
 
     GrayImage *img = readPGM(argv[1]);
     if (img == NULL)
@@ -122,11 +127,11 @@ int main(int argc, char **argv)
 
     // Convoluzione
     GrayImage *imgConv = createPGM(dimZoom, dimZoom);
-
-    superSampler<<<1, 1>>>(d_imgCenter, /*d_imgLeft, d_imgRight, d_imgUp, d_imgDown,*/ d_imgConv, dimZoom);
-
-    checkCudaErrors(cudaMemcpy(imgConv->data, d_imgConv, dimZoom * dimZoom * sizeof(int), cudaMemcpyDeviceToHost));
-
+    int thread= dimZoom*dimZoom;
+    superSampler<<<1, 1>>>(d_imgCenter, d_imgLeft, d_imgRight, d_imgUp, d_imgDown, d_imgConv, dimZoom);
+    cudaDeviceSynchronize();
+    cudaMemcpy(imgConv->data, d_imgConv, dimZoom * dimZoom * sizeof(int), cudaMemcpyDeviceToHost);
+    printf("well done");
     // Stampa
 
     writePGM("output.pgm", imgConv);

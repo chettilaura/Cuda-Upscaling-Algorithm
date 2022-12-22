@@ -3,49 +3,120 @@
 #include <stdlib.h>
 #include <helper_cuda.h>
 
-/*
-    includere più di un vettore img in un kernel non è possibile, crasha il programma
-*/
-__global__ void superSampler(int *d_imgCenter, int *d_imgLeft, int *d_imgRight, int *d_imgUp, int *d_imgDown, int *d_imgConv, int dimZoom){
-    //int i = threadIdx.x + blockIdx.x * blockDim.x;
-    //int j = threadIdx.y + blockIdx.y * blockDim.y;
-   /* if (i < dimZoom && j < dimZoom)
-    {
-        int sum = 0;
-        //sum += d_imgCenter[i * dimZoom + j] * 4;
-        sum += d_imgLeft[j * dimZoom + i] * -1;
-        sum += d_imgRight[j * dimZoom + i] * -1;
-        sum += d_imgUp[j * dimZoom + i] * -1;
-        sum += d_imgDown[j * dimZoom + i] * -1;
-        //d_imgConv[i * dimZoom + j] = sum;
-    }*/
+#define N 9
+
+signed char sharpness[N] = {0, -1, 0, -1, 4, -1, 0, -1, 0};
+__constant__ float mask[N];
+
+__global__ void convGPU(char *input, char *output, const int dim)
+{
+    const int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if(idx >= dim*dim)
+        return;
+
+    output[idx] = input[idx] * mask [0] + input[idx + 1] * mask [1] + input[idx + 2] * mask [2] + input[idx + dim] * mask [3] + input[idx + dim + 1] * mask [4] + input[idx + dim + 2] * mask [5] + input[idx + dim*2] * mask [6] + input[idx + dim*2 + 1] * mask [7] + input[idx + dim*2 + 2] * mask [8];
 }
 
-int main(int argc, char **argv) {
-    int dimX = 0;    // Coordinata centro X maschera per selezione
-    int dimY = 0;    // Coordinata centro Y maschera per selezione
-    int dimZoom = 0; // Dimensione della maschera per selezione
+__global__ void scaleGPU(char *input, char *output, const int dim, const int dimSmall)
+{    
+}
 
-    // Inizializzazione
-    if (argc != 5)
+int main(int argc, char **argv)
+{
+    // Filter Setup
+    switch (argc)
     {
-        printf("Uso: %s inputFile.? DimX DimY dimZoom\n", argv[0]);
+    // Help
+    case 2:
+        if (argv[1] == std::string("-h") || argv[1] == std::string("--help"))
+        {
+            printf("Usage: %s inputFile.ppm DimX DimY dimZoom mode [GaussLength GaussSigma]\n\nWhere:\n\tDimX: X coordinate of the center of the selection zone\n\tDimY: Y coordinate of the center of the selection zone\n\tdimZoom: Length of the side of the selection mask which has a square shape\n\tmode: 0 for Sharpness filter, 1 for Gaussian*, 2 for custom 3x3 Kernel*\n*Input required from the user\n", argv[0]);
+            return 0;
+        }
+        else
+        {
+            printf("Wrong command line input. Use -h or --help for more information\n");
+            return -1;
+        }
+        break;
+
+    // Sharpness or Custom Kernel
+    case 6:{
+        int mode = (int)strtol(argv[5], NULL, 10);
+        if (mode == 0)
+            cudaMemcpyToSymbol(mask, sharpness, N * sizeof(char));
+        else if (mode == 2)
+        {
+            printf("Insert the 3x3 kernel values, from left to right, from top to bottom to a single line where each value is separated by a space\n");
+            const char M = N * 4;
+            char buff[M];
+            fgets(buff, M, stdin);
+
+            // Check input
+            int bLength = strlen(buff);
+            if (bLength < 18) // 9 values, 8 spaces
+            {
+                printf("Wrong input. Use -h or --help for more information\n");
+                return -1;
+            }
+            float *kernel = (float *)malloc(N * sizeof(float));
+            if (sscanf(buff, "%f %f %f %f %f %f %f %f %f", &kernel[0], &kernel[1], &kernel[2], &kernel[3], &kernel[4], &kernel[5], &kernel[6], &kernel[7], &kernel[8]) != 9)
+            {
+                printf("Wrong input. Use -h or --help for more information\n");
+                return -1;
+            }
+            cudaMemcpyToSymbol(mask, kernel, N * sizeof(float));
+            free(kernel);
+        }
+        else
+        {
+            printf("Wrong command line input. Use -h or --help for more information\n");
+            return -1;
+        }
+    }
+        break;
+
+    // Gaussian
+    case 8:{
+        int mode = (int)strtol(argv[5], NULL, 10);
+        if (mode != 1)
+        {
+            printf("Wrong command line input. Do not input gaussian data for non-gaussian matrices. Use -h or --help for more information\n");
+            return -1;
+        }
+        int gaussLength = (int)strtol(argv[6], NULL, 10);
+        float gaussSigma = (float)strtof(argv[7], NULL);
+        if (gaussLength < 3 || gaussLength > 15 || gaussSigma < 0.5 || gaussSigma > 5)
+        {
+            printf("Wrong Gaussian values:\nACCEPTED VALUES:\n\t 3 <= gaussLength <= 15\n\t 0.5 <= gaussSigma <= 5\nAborting...\n");
+            return -1;
+        }
+        float *gaussKernel = (float *)malloc(N * sizeof(float));
+        // TODO: implementare gaussianKernel
+        // gaussKernel = gaussianKernel(gaussLength, gaussSigma);
+        cudaMemcpyToSymbol(mask, gaussKernel, N * sizeof(float));
+        free(gaussKernel);
+    }
+        break;
+    
+    default:
+        printf("Wrong command line input. Use -h or --help for more information\n");
         return -1;
     }
 
-    dimX = (int) strtol(argv[2], NULL, 10);
-    dimY = (int) strtol(argv[3], NULL, 10);
-    dimZoom = (int) strtol(argv[4], NULL, 10);
+    const int dimX = (int)strtol(argv[2], NULL, 10);
+    const int dimY = (int)strtol(argv[3], NULL, 10);
+    const int dimZoom = (int)strtol(argv[4], NULL, 10);
+
+    if (dimZoom % 2 != 0)
+    {
+        printf("Errore: dimZoom deve essere pari\n");
+        return -1;
+    }
 
     printf("DimX: %d, DimY: %d, dimZoom: %d\n", dimX, dimY, dimZoom);
 
-
-    GrayImage *img = readPGM(argv[1]);
-    if (img == NULL)
-    {
-        printf("Errore nell'apertura dell'immagine");
-        return -1;
-    }
+    RGBImage *img = readPPM(argv[1]);
 
     // Check per Y
     if (dimY > img->height || dimY < 0)
@@ -80,74 +151,73 @@ int main(int argc, char **argv) {
     }
 
     // Selezione
-    GrayImage *imgCenter = createPGM(dimZoom, dimZoom);
-    GrayImage *imgLeft = createPGM(dimZoom, dimZoom);
-    GrayImage *imgRight = createPGM(dimZoom, dimZoom);
-    GrayImage *imgUp = createPGM(dimZoom, dimZoom);
-    GrayImage *imgDown = createPGM(dimZoom, dimZoom);
-
+    // What is the order between scaling and convolution?
+    
+    const int inConvDim = dimZoom + 2;
+    const int outScaleDim = (img->width >= img->height) ? img->width : img->height;    
+    const int pxCount = outScaleDim * outScaleDim * 3;
+    RGBImage *imgConvWorked = createPPM(inConvDim, inConvDim);
+    RGBImage *imgScaled = createPPM(outScaleDim, outScaleDim);
+    
+    unsigned char *startingMatrix = (unsigned char *)malloc(inConvDim * inConvDim * 3 * sizeof(unsigned char));    
     const int pointX = dimX - dimZoom / 2;
     const int pointY = dimY - dimZoom / 2;
 
     for (int i = 0; i < dimZoom; i++)
         for (int j = 0; j < dimZoom; j++)
-            imgCenter->data[i * dimZoom + j] = img->data[pointX + j + (pointY + i) * img->width];
+        {
+            startingMatrix[(i + 1) * inConvDim * 3 + (j + 1) * 3] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3];
+            startingMatrix[(i + 1) * inConvDim * 3 + (j + 1) * 3 + 1] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3 + 1];
+            startingMatrix[(i + 1) * inConvDim * 3 + (j + 1) * 3 + 2] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3 + 2];
+        }
 
-    for (int i = 0; i < dimZoom; i++)
-        for (int j = 0; j < dimZoom; j++)
-            imgLeft->data[i * dimZoom + j] = img->data[pointX + j - 1 + (pointY + i) * img->width];
+    destroyPPM(img);
 
-    for (int i = 0; i < dimZoom; i++)
-        for (int j = 0; j < dimZoom; j++)
-            imgRight->data[i * dimZoom + j] = img->data[pointX + j + 1 + (pointY + i) * img->width];
+    char *d_start, *d_Scale, *d_Conv;    
 
-    for (int i = 0; i < dimZoom; i++)
-        for (int j = 0; j < dimZoom; j++)
-            imgUp->data[i * dimZoom + j] = img->data[pointX + j + (pointY + i - 1) * img->width];
-
-    for (int i = 0; i < dimZoom; i++)
-        for (int j = 0; j < dimZoom; j++)
-            imgDown->data[i * dimZoom + j] = img->data[pointX + j + (pointY + i + 1) * img->width];
-
-
-    
-    int *d_imgCenter, *d_imgLeft, *d_imgRight, *d_imgUp, *d_imgDown, *d_imgConv;
-    cudaMalloc((void **)&d_imgCenter, dimZoom * dimZoom * sizeof(int));
-    cudaMalloc((void **)&d_imgLeft, dimZoom * dimZoom * sizeof(int));
-    cudaMalloc((void **)&d_imgRight, dimZoom * dimZoom * sizeof(int));
-    cudaMalloc((void **)&d_imgUp, dimZoom * dimZoom * sizeof(int));
-    cudaMalloc((void **)&d_imgDown, dimZoom * dimZoom * sizeof(int));
-    cudaMalloc((void **)&d_imgConv, dimZoom * dimZoom * sizeof(int));
-
-    cudaMemcpy(d_imgCenter, imgCenter->data, dimZoom * dimZoom * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_imgLeft, imgLeft->data, dimZoom * dimZoom * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_imgRight, imgRight->data, dimZoom * dimZoom * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_imgUp, imgUp->data, dimZoom * dimZoom * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_imgDown, imgDown->data, dimZoom * dimZoom * sizeof(int), cudaMemcpyHostToDevice);
-
-    // Convoluzione
-    GrayImage *imgConv = createPGM(dimZoom, dimZoom);
-    int thread= dimZoom*dimZoom;
-    superSampler<<<1, 1>>>(d_imgCenter, d_imgLeft, d_imgRight, d_imgUp, d_imgDown, d_imgConv, dimZoom);
+    cudaMalloc((void **)&d_start, inConvDim * inConvDim * 3 * sizeof(char));
+    cudaMalloc((void **)&d_Scale, outScaleDim * outScaleDim * 3 * sizeof(char));
+    cudaMalloc((void **)&d_Conv, dimZoom * dimZoom * 3 * sizeof(char));
+    cudaMemcpy(d_start, startingMatrix, inConvDim * inConvDim * 3 * sizeof(char), cudaMemcpyHostToDevice);
     cudaDeviceSynchronize();
-    cudaMemcpy(imgConv->data, d_imgConv, dimZoom * dimZoom * sizeof(int), cudaMemcpyDeviceToHost);
-    printf("well done");
-    // Stampa
+    free(startingMatrix);
 
-    writePGM("output.pgm", imgConv);
-    destroyPGM(img);
-    destroyPGM(imgCenter);
-    destroyPGM(imgLeft);
-    destroyPGM(imgRight);
-    destroyPGM(imgUp);
-    destroyPGM(imgDown);
-    destroyPGM(imgConv);
-    cudaFree(d_imgCenter);
-    cudaFree(d_imgLeft);
-    cudaFree(d_imgRight);
-    cudaFree(d_imgUp);
-    cudaFree(d_imgDown);
-    cudaFree(d_imgConv);
+    // Check GPU
+    int nDevices;
+    cudaError_t err = cudaGetDeviceCount(&nDevices);
+    if (err != cudaSuccess) {
+        printf("%s\n", cudaGetErrorString(err));
+        return -1;
+    }
+
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, 0);
+    const int maxThreads = prop.maxThreadsPerBlock;
+    const int blockCeiling = (dimZoom * 3 * dimZoom / maxThreads) + 1;
+
+
+
+    // Convolution
+    convGPU<<<blockCeiling, maxThreads>>>(d_start, d_Conv, dimZoom);
+    cudaDeviceSynchronize();
+
+
+    // Scale
+    const int blockCeilingScale = (pxCount / maxThreads) + 1;
+    scaleGPU<<<blockCeilingScale, maxThreads>>>(d_Conv, d_Scale, outScaleDim, dimZoom);    
+    cudaDeviceSynchronize();
+
+    //cudaMemcpy(imgFinalWorked->data, d_endScale, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
+    cudaDeviceSynchronize();
+    cudaFree(d_start);
+    cudaFree(d_Conv);
+    cudaFree(d_Scale);
+    printf("well done");
+
+    // Stampa
+    //writePPM("output.ppm", imgFinalWorked);
+    destroyPPM(imgScaled);
+    destroyPPM(imgConvWorked);
 
     return 0;
 }

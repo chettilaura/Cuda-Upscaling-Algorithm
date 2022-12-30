@@ -198,6 +198,7 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    //fine switch case
     const int dimX = (int)strtol(argv[2], NULL, 10);        // X coordinate of the center of the selection zone
     const int dimY = (int)strtol(argv[3], NULL, 10);        // Y coordinate of the center of the selection zone
     const int dimZoom = (int)strtol(argv[4], NULL, 10);     // Length of the side of the selection mask which has a square shape

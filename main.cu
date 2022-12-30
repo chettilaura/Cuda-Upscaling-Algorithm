@@ -22,6 +22,24 @@ __global__ void convGPU(char *input, char *output, const int dimS, const int dim
     //output[idx] = input[idx] * mask [0] + input[idx + 1] * mask [1] + input[idx + 2] * mask [2] + input[idx + dim] * mask [3] + input[idx + dim + 1] * mask [4] + input[idx + dim + 2] * mask [5] + input[idx + dim*2] * mask [6] + input[idx + dim*2 + 1] * mask [7] + input[idx + dim*2 + 2] * mask [8];
 }
 
+float* gaussianKernel(const int gaussLength, const float gaussSigma){
+    const char dimension = 3;
+    float *gaussKernel = (float *) malloc(dimension * dimension * sizeof(float));
+    float sum = 0;
+    for(int i = 0; i < dimension; i++){
+        for(int j = 0; j < dimension; j++){
+            gaussKernel[i * dimension + j] = exp(-((i - gaussLength / 2) * (i - gaussLength / 2) + (j - gaussLength / 2) * (j - gaussLength / 2)) / (2 * gaussSigma * gaussSigma));
+            sum += gaussKernel[i * dimension + j];
+        }
+    }
+    for(int i = 0; i < dimension; i++){
+        for(int j = 0; j < dimension; j++){
+            gaussKernel[i * dimension + j] /= sum;
+        }
+    }
+    return gaussKernel;
+}
+
 void zero_order_zooming(int *img, int *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height)
 {
 
@@ -169,8 +187,7 @@ int main(int argc, char **argv)
             return -1;
         }
         float *gaussKernel = (float *)malloc(N * sizeof(float));
-        // TODO: implementare gaussianKernel
-        // gaussKernel = gaussianKernel(gaussLength, gaussSigma);
+        gaussKernel = gaussianKernel(gaussLength, gaussSigma);
         cudaMemcpyToSymbol(mask, gaussKernel, N * sizeof(float));
         free(gaussKernel);
     }
@@ -192,7 +209,11 @@ int main(int argc, char **argv)
     }
 
     printf("DimX: %d, DimY: %d, dimZoom: %d\n", dimX, dimY, dimZoom);
-
+    if(std::string(argv[1]).size() < 4 || std::string(argv[1]).substr(std::string(argv[1]).size() - 4) != ".ppm")
+    {
+        printf("Error: input file must be a .ppm file\n");
+        return -1;
+    }
     RGBImage *img = readPPM(argv[1]);
 
     // Y boundaries check and mask check

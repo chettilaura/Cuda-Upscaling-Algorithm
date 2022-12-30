@@ -209,6 +209,8 @@ int main(int argc, char **argv)
     const int dimY = (int)strtol(argv[3], NULL, 10);        // Y coordinate of the center of the selection zone
     const int dimZoom = (int)strtol(argv[4], NULL, 10);     // Length of the side of the selection mask which has a square shape
 
+
+    // check dimZoom is even
     if (dimZoom % 2 != 0)
     {
         printf("Error: dimZoom must be even\n");
@@ -216,6 +218,8 @@ int main(int argc, char **argv)
     }
 
     printf("DimX: %d, DimY: %d, dimZoom: %d\n", dimX, dimY, dimZoom);
+
+    // Check input file ends with .ppm
     if(std::string(argv[1]).size() < 4 || std::string(argv[1]).substr(std::string(argv[1]).size() - 4) != ".ppm")
     {
         printf("Error: input file must be a .ppm file\n");

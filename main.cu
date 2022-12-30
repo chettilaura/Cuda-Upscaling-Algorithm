@@ -8,19 +8,24 @@
 signed char sharpness[N] = {0, -1, 0, -1, 4, -1, 0, -1, 0};
 __constant__ float mask[N];
 
+__global__ void resizer(char *start,char *output, int dim_lato_start, int dim_lato_output, int dim_lato_mask, int dim_tot_output){
+
+    const int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if(idx >= dim_tot_output)
+        return;
+
+}
+
+/*
 __global__ void convGPU(char *input, char *output, const int dimS, const int dimB)
 {
     const int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx >= dimB)
         return;
 
-    // crea immagine zoommata
-
-    __syncthreads();
-    // applica filtro
-
     //output[idx] = input[idx] * mask [0] + input[idx + 1] * mask [1] + input[idx + 2] * mask [2] + input[idx + dim] * mask [3] + input[idx + dim + 1] * mask [4] + input[idx + dim + 2] * mask [5] + input[idx + dim*2] * mask [6] + input[idx + dim*2 + 1] * mask [7] + input[idx + dim*2 + 2] * mask [8];
 }
+*/
 
 float* gaussianKernel(const int gaussLength, const float gaussSigma){
     const char dimension = 3;
@@ -276,10 +281,17 @@ int main(int argc, char **argv)
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, 0);
     const int maxThreads = prop.maxThreadsPerBlock;
+    //calcolo numero blocchi necessari 
     const int blockCeiling = (dimZoom * 3 * dimZoom / maxThreads) + 1;
+    //controllo numero blocchi utilizzabili
+    if (blockCeiling > prop.maxGridSize[0]){
+        printf("%s\n", cudaGetErrorString(err));
+        return -1;
+    }
 
-    // Convolution
-    convGPU<<<blockCeiling, maxThreads>>>(d_start, d_scale, dimZoom*dimZoom*3, pxCount);
+    //chiamata kernel:passiamo ritaglio iniziale, output, dim ritaglio iniziale, dim output, dim maschera, numero pixel output (non passiamo maschera perchè è già in memoria costante)
+    resizer<<<blockCeiling, maxThreads>>>(d_start,d_scale, inConvDim, outScaleDim, dimZoom, pxCount);
+    //convGPU<<<blockCeiling, maxThreads>>>(d_start, d_scale, dimZoom*dimZoom*3, pxCount);
     cudaMemcpy(imgScaled->data, d_scale, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
     cudaDeviceSynchronize();
 

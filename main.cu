@@ -47,7 +47,7 @@ void zero_order_zooming(int *img, int *zoomed_out, int dimZoomX, int dimZoomY, i
     int y_range_max;
 
     int *zoomed = (int *) malloc(dimZoomX * dimZoomY * sizeof(int));
-    int *zoomed_out = (int *) malloc(width * height * sizeof(int));
+    zoomed_out = (int *) malloc(width * height * sizeof(int));
 
     if (x < 0 || y < 0 || x > width || y > height)
     {

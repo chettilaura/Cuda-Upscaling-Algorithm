@@ -8,13 +8,18 @@
 signed char sharpness[N] = {0, -1, 0, -1, 4, -1, 0, -1, 0};
 __constant__ float mask[N];
 
-__global__ void convGPU(char *input, char *output, const int dim)
+__global__ void convGPU(char *input, char *output, const int dimS, const int dimB)
 {
     const int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if(idx >= dim*dim)
+    if(idx >= dimB)
         return;
 
-    output[idx] = input[idx] * mask [0] + input[idx + 1] * mask [1] + input[idx + 2] * mask [2] + input[idx + dim] * mask [3] + input[idx + dim + 1] * mask [4] + input[idx + dim + 2] * mask [5] + input[idx + dim*2] * mask [6] + input[idx + dim*2 + 1] * mask [7] + input[idx + dim*2 + 2] * mask [8];
+    // crea immagine zoommata
+
+    __syncthreads();
+    // applica filtro
+
+    //output[idx] = input[idx] * mask [0] + input[idx + 1] * mask [1] + input[idx + 2] * mask [2] + input[idx + dim] * mask [3] + input[idx + dim + 1] * mask [4] + input[idx + dim + 2] * mask [5] + input[idx + dim*2] * mask [6] + input[idx + dim*2 + 1] * mask [7] + input[idx + dim*2 + 2] * mask [8];
 }
 
 void zero_order_zooming(int *img, int *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height)
@@ -23,8 +28,8 @@ void zero_order_zooming(int *img, int *zoomed_out, int dimZoomX, int dimZoomY, i
     int x_range_max;
     int y_range_max;
 
-    int zoomed = malloc(dimZoomX * dimZoomY * sizeof(int));
-    int zoomed_out = malloc(width * height * sizeof(int));
+    int *zoomed = (int *) malloc(dimZoomX * dimZoomY * sizeof(int));
+    int *zoomed_out = (int *) malloc(width * height * sizeof(int));
 
     if (x < 0 || y < 0 || x > width || y > height)
     {
@@ -91,11 +96,6 @@ void zero_order_zooming(int *img, int *zoomed_out, int dimZoomX, int dimZoomY, i
             y_float_stuff_counter++;
         }
     }
-
-}
-
-__global__ void scaleGPU(char *input, char *output, const int dim, const int dimSmall)
-{    
 }
 
 int main(int argc, char **argv)
@@ -181,17 +181,13 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    dimX = (int) strtol(argv[2], NULL, 10);
-    dimY = (int) strtol(argv[3], NULL, 10);
-    dimZoom = (int) strtol(argv[4], NULL, 10);
+    const int dimX = (int)strtol(argv[2], NULL, 10);        // X coordinate of the center of the selection zone
+    const int dimY = (int)strtol(argv[3], NULL, 10);        // Y coordinate of the center of the selection zone
+    const int dimZoom = (int)strtol(argv[4], NULL, 10);     // Length of the side of the selection mask which has a square shape
 
-    printf("DimX: %d, DimY: %d, dimZoom: %d\n", dimX, dimY, dimZoom);
-
-
-    GrayImage *img = readPGM(argv[1]);
-    if (img == NULL)
+    if (dimZoom % 2 != 0)
     {
-        printf("Errore: dimZoom deve essere pari\n");
+        printf("Error: dimZoom must be even\n");
         return -1;
     }
 
@@ -199,50 +195,38 @@ int main(int argc, char **argv)
 
     RGBImage *img = readPPM(argv[1]);
 
-    // Check per Y
+    // Y boundaries check and mask check
+    const int pointY = dimY - dimZoom / 2;
     if (dimY > img->height || dimY < 0)
     {
-        printf("Errore: Y fuori dai bordi dell'immagine");
+        printf("Error: dimY outside image boundaries");
         return -1;
     }
+    if ((dimY + dimZoom / 2) > img->height - 1 || pointY < 1)
     {
-        const int boardYup = dimY - dimZoom / 2;
-        const int boardYdown = dimY + dimZoom / 2;
-        if (boardYdown > img->height - 1 || boardYup < 1)
-        {
-            printf("Errore: Maschera Y fuori dai bordi dell'immagine");
-            return -1;
-        }
+        printf("Error: Y mask outside image boundaries");
+        return -1;
     }
 
-    // Check per X
+    // X boundaries check and mask check
+    const int pointX = dimX - dimZoom / 2;
     if (dimX > img->width || dimX < 0)
     {
-        printf("Errore: X fuori dai bordi dell'immagine");
+        printf("Error: dimX outside image boundaries");
         return -1;
     }
+    if ((dimX + dimZoom / 2) > img->width - 1 || pointX < 1)
     {
-        const int boardXup = dimX + dimZoom / 2;
-        const int boardXdown = dimX - dimZoom / 2;
-        if (boardXup > img->width - 1 || boardXdown < 1)
-        {
-            printf("Errore: Maschera X fuori dai bordi dell'immagine");
-            return -1;
-        }
+        printf("Error: X mask outside image boundaries");
+        return -1;
     }
-
-    // Selezione
-    // What is the order between scaling and convolution?
     
+    // Selection    
     const int inConvDim = dimZoom + 2;
     const int outScaleDim = (img->width >= img->height) ? img->width : img->height;    
     const int pxCount = outScaleDim * outScaleDim * 3;
-    RGBImage *imgConvWorked = createPPM(inConvDim, inConvDim);
     RGBImage *imgScaled = createPPM(outScaleDim, outScaleDim);
-    
     unsigned char *startingMatrix = (unsigned char *)malloc(inConvDim * inConvDim * 3 * sizeof(unsigned char));    
-    const int pointX = dimX - dimZoom / 2;
-    const int pointY = dimY - dimZoom / 2;
 
     for (int i = 0; i < dimZoom; i++)
         for (int j = 0; j < dimZoom; j++)
@@ -251,16 +235,12 @@ int main(int argc, char **argv)
             startingMatrix[(i + 1) * inConvDim * 3 + (j + 1) * 3 + 1] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3 + 1];
             startingMatrix[(i + 1) * inConvDim * 3 + (j + 1) * 3 + 2] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3 + 2];
         }
-
     destroyPPM(img);
 
-    char *d_start, *d_Scale, *d_Conv;    
-
+    char *d_start, *d_scale;
     cudaMalloc((void **)&d_start, inConvDim * inConvDim * 3 * sizeof(char));
-    cudaMalloc((void **)&d_Scale, outScaleDim * outScaleDim * 3 * sizeof(char));
-    cudaMalloc((void **)&d_Conv, dimZoom * dimZoom * 3 * sizeof(char));
+    cudaMalloc((void **)&d_scale, outScaleDim * outScaleDim * 3 * sizeof(char));
     cudaMemcpy(d_start, startingMatrix, inConvDim * inConvDim * 3 * sizeof(char), cudaMemcpyHostToDevice);
-    cudaDeviceSynchronize();
     free(startingMatrix);
 
     // Check GPU
@@ -271,40 +251,23 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, 0);
+    const int maxThreads = prop.maxThreadsPerBlock;
+    const int blockCeiling = (dimZoom * 3 * dimZoom / maxThreads) + 1;
 
-    
-    int *d_imgCenter, *d_imgLeft, *d_imgRight, *d_imgUp, *d_imgDown, *d_imgConv;
-    cudaMalloc((void **)&d_imgCenter, dimZoom * dimZoom * sizeof(int));
-    cudaMalloc((void **)&d_imgLeft, dimZoom * dimZoom * sizeof(int));
-    cudaMalloc((void **)&d_imgRight, dimZoom * dimZoom * sizeof(int));
-    cudaMalloc((void **)&d_imgUp, dimZoom * dimZoom * sizeof(int));
-    cudaMalloc((void **)&d_imgDown, dimZoom * dimZoom * sizeof(int));
-    cudaMalloc((void **)&d_imgConv, dimZoom * dimZoom * sizeof(int));
-
-
-    // Convoluzione
-    GrayImage *imgConv = createPGM(dimZoom, dimZoom);
-    int thread= dimZoom*dimZoom;
-    superSampler<<<1, 1>>>(d_imgCenter, d_imgLeft, d_imgRight, d_imgUp, d_imgDown, d_imgConv, dimZoom);
+    // Convolution
+    convGPU<<<blockCeiling, maxThreads>>>(d_start, d_scale, dimZoom*dimZoom*3, pxCount);
+    cudaMemcpy(imgScaled->data, d_scale, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
     cudaDeviceSynchronize();
 
-
-    // Scale
-    const int blockCeilingScale = (pxCount / maxThreads) + 1;
-    scaleGPU<<<blockCeilingScale, maxThreads>>>(d_Conv, d_Scale, outScaleDim, dimZoom);    
-    cudaDeviceSynchronize();
-
-    //cudaMemcpy(imgFinalWorked->data, d_endScale, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
-    cudaDeviceSynchronize();
     cudaFree(d_start);
-    cudaFree(d_Conv);
-    cudaFree(d_Scale);
+    cudaFree(d_scale);
     printf("well done");
 
-    // Stampa
-    //writePPM("output.ppm", imgFinalWorked);
+    // Print output
+    writePPM("output.ppm", imgScaled);
     destroyPPM(imgScaled);
-    destroyPPM(imgConvWorked);
 
     return 0;
 }

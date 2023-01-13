@@ -21,9 +21,8 @@ void convCPU(char *input, char *output, char *kernel, const int width, const int
 }
 
 
-void gaussianKernelCPU(const int gaussLength, const float gaussSigma, float *outkernel)
+void gaussianKernelCPU(const int gaussLength, const float gaussSigma, float *kernel)
 {
-    float *kernel = (float *)malloc(gaussLength * gaussLength * sizeof(float));
     float sum = 0;
     for (int i = 0; i < gaussLength; i++)
     {
@@ -40,20 +39,17 @@ void gaussianKernelCPU(const int gaussLength, const float gaussSigma, float *out
             kernel[i * gaussLength + j] /= sum;
         }
     }
-    memcpy(outkernel, kernel, gaussLength * gaussLength * sizeof(float));
-    free(kernel);
 }
 
 
 
-void zero_order_zoomingCPU(int *img, int *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height)
+void zero_order_zoomingCPU(unsigned char *img, unsigned char *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height, int outDim)
 {
 
     int x_range_max;
     int y_range_max;
 
     int *zoomed = (int *)malloc(dimZoomX * dimZoomY * sizeof(int));
-    zoomed_out = (int *)malloc(width * height * sizeof(int));
 
     if (x < 0 || y < 0 || x > width || y > height)
     {
@@ -101,19 +97,19 @@ void zero_order_zoomingCPU(int *img, int *zoomed_out, int dimZoomX, int dimZoomY
     int x_float_stuff_counter = 0;
     int y_float_stuff_counter = 0;
 
-    for (int i = 0; i < height; i++)
+    for (int i = 0; i < outDim; i++)
     {
-        for (int j = 0; j < width; j++)
+        for (int j = 0; j < outDim; j++)
         {
-            zoomed_out[i * width + j] = zoomed[(i / stuffing_y) * dimZoomX + (j / stuffing_x)];
+            zoomed_out[i * outDim + j] = zoomed[(i / stuffing_y) * dimZoomX + (j / stuffing_x)];
             if (x_float_stuff_counter == x_float_stuff)
             {
-                zoomed_out[i * width + j] = zoomed[(i / stuffing_y) * dimZoomX + (j / stuffing_x) + 1];
+                zoomed_out[i * outDim + j] = zoomed[(i / stuffing_y) * dimZoomX + (j / stuffing_x) + 1];
                 x_float_stuff_counter = 0;
             }
             if (y_float_stuff_counter == y_float_stuff)
             {
-                zoomed_out[i * width + j] = zoomed[((i / stuffing_y) + 1) * dimZoomX + (j / stuffing_x)];
+                zoomed_out[i * outDim + j] = zoomed[((i / stuffing_y) + 1) * dimZoomX + (j / stuffing_x)];
                 y_float_stuff_counter = 0;
             }
             x_float_stuff_counter++;

@@ -8,7 +8,6 @@
 #define DEBUG 1
 
 signed char sharpness[N] = {0, -1, 0, -1, 4, -1, 0, -1, 0};
-__constant__ float mask[N];
 
 int main(int argc, char **argv)
 {
@@ -32,6 +31,10 @@ int main(int argc, char **argv)
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, 0);
 
+    // Mask variables
+    float *d_mask;
+    char maskDim = 0;
+
     // Filter Setup
     switch (argc)
     {
@@ -53,8 +56,10 @@ int main(int argc, char **argv)
     case 6:
     {
         int mode = (int)strtol(argv[5], NULL, 10);
-        if (mode == 0)
-            cudaMemcpyToSymbol(mask, sharpness, N * sizeof(char));
+        if (mode == 0){
+            cudaMemcpy(&d_mask, sharpness, N * sizeof(float), cudaMemcpyHostToDevice);
+            maskDim = N;
+        }
         else if (mode == 2)
         {
             printf("Insert the 3x3 kernel values, from left to right, from top to bottom to a single line where each value is separated by a space\n");
@@ -75,7 +80,8 @@ int main(int argc, char **argv)
                 printf("Wrong input. Use -h or --help for more information\n");
                 return -1;
             }
-            cudaMemcpyToSymbol(mask, kernel, N * sizeof(float));
+            cudaMemcpy(&d_mask, kernel, N * sizeof(float), cudaMemcpyHostToDevice);
+            maskDim = N;
             free(kernel);
         }
         else
@@ -99,13 +105,12 @@ int main(int argc, char **argv)
         float gaussSigma = (float)strtof(argv[7], NULL);
         if (gaussLength < 3 || gaussLength > 15 || gaussLength % 2 == 1 || gaussSigma < 0.5 || gaussSigma > 5)
         {
-            printf("Wrong Gaussian values:\nACCEPTED VALUES:\n\t 3 <= gaussLength (odd) <= 15\n\t 0.5 <= gaussSigma <= 5\nAborting...\n");
+            printf("Wrong Gaussian values:\nACCEPTED VALUES:\n\t 3 <= gaussLength (must be odd) <= 15\n\t 0.5 <= gaussSigma <= 5\nAborting...\n");
             return -1;
         }
-        float *gaussKernel = (float *)malloc(N * sizeof(float));
-        gaussianKernelCPU(3, gaussSigma, gaussKernel);
-        //gaussianKernelCPU(gaussLength, gaussSigma, gaussKernel);   // needed when dynamic approach used
-        cudaMemcpyToSymbol(mask, gaussKernel, N * sizeof(float));
+        float *gaussKernel = (float *)malloc(gaussLength * gaussLength * sizeof(float));
+        gaussianKernelCPU(gaussLength, gaussSigma, gaussKernel);
+        cudaMemcpy(&d_mask, gaussKernel, gaussLength * gaussLength * sizeof(float), cudaMemcpyHostToDevice);
         free(gaussKernel);
     }
     break;
@@ -164,9 +169,15 @@ int main(int argc, char **argv)
         printf("Error: X mask outside image boundaries");
         return -1;
     }
+    
+    const int outScaleDim = (img->width >= img->height) ? img->width : img->height;
 
+    RGBImage *imgScaled = createPPM(outScaleDim, outScaleDim);
+
+    zero_order_zoomingCPU(img->data, imgScaled->data, dimZoom, dimZoom, dimX, dimY, img->width, img->height, outScaleDim);
+    writePPM("output.ppm", imgScaled);
     // Selection
-    const int inConvDim = dimZoom + 2;
+    /*const int inConvDim = dimZoom + 2;
     const int outScaleDim = (img->width >= img->height) ? img->width : img->height;
     const int pxCount = outScaleDim * outScaleDim * 3;
     RGBImage *imgScaled = createPPM(outScaleDim, outScaleDim);
@@ -215,7 +226,7 @@ int main(int argc, char **argv)
     cudaMemcpy(imgScaled->data, d_scale, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
 
     cudaFree(d_start);
-    cudaFree(d_scale);
+    cudaFree(d_scale);*/
     printf("well done");
 
     // Print output

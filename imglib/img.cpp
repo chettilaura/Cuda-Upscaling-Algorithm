@@ -31,8 +31,6 @@ RGBImage* readPPM(const char* filename) {
         exit(1);
     }
 
-
-
     c = getc(fp);
     while (c == '#') {
         while (getc(fp) != '\n');
@@ -70,96 +68,6 @@ RGBImage* readPPM(const char* filename) {
     return img;
 }
 
-GrayImage* readPGM(const char* filename) {
-    char buff[16];
-    GrayImage* img;
-    FILE* fp;
-    int c, depth;
-    int w, h;
-
-    fp = fopen(filename, "rb");
-    if (!fp) {
-        fprintf(stderr, "Unable to open file '%s'\n", filename);
-        exit(1);
-    }
-
-    if (!fgets(buff, sizeof(buff), fp)) {
-        perror(filename);
-        exit(1);
-    }
-
-
-    if (buff[0] != 'P' || buff[1] != '5') {
-        fprintf(stderr, "Invalid image format (must be 'P5')\n");
-        exit(1);
-    }
-
-
-
-
-    c = getc(fp);
-    while (c == '#') {
-        while (getc(fp) != '\n');
-        c = getc(fp);
-    }
-
-    ungetc(c, fp);
-
-    if (fscanf(fp, "%d %d", &w, &h) != 2) {
-        fprintf(stderr, "Invalid image size (error loading '%s')\n", filename);
-        exit(1);
-    }
-
-
-    if (fscanf(fp, "%d", &depth) != 1) {
-        fprintf(stderr, "Invalid rgb component (error loading '%s')\n", filename);
-        exit(1);
-    }
-
-    if (depth != MAX_COLOR_DEPTH) {
-        fprintf(stderr, "'%s' does not have 8-bits components\n", filename);
-        exit(1);
-    }
-
-    while (fgetc(fp) != '\n');
-    img = createPGM(w, h);
-
-
-    if (fread(img->data, img->width, img->height, fp) != img->height) {
-        fprintf(stderr, "Error loading image '%s'\n", filename);
-        exit(1);
-    }
-
-    fclose(fp);
-    return img;
-}
-
-void writePGM(const char* filename, GrayImage* img)
-{
-    FILE* fp;
-    fp = fopen(filename, "wb");
-    if (!fp) {
-        fprintf(stderr, "Unable to open file '%s'\n", filename);
-        exit(1);
-    }
-
-
-    fprintf(fp, "P5\n");
-
-
-    fprintf(fp, "# Comment\n");
-
-
-    fprintf(fp, "%d %d\n", img->width, img->height);
-
-    fprintf(fp, "%d\n", MAX_COLOR_DEPTH);
-
-    printf("%d %d\n", img->width, img->height);
-
-    fwrite(img->data, img->width, img->height, fp);
-    fclose(fp);
-}
-
 void writePPM(const char* filename, RGBImage* img)
 {
     FILE* fp;
@@ -179,28 +87,6 @@ void writePPM(const char* filename, RGBImage* img)
 
     fwrite(img->data, 3 * img->width, img->height, fp);
     fclose(fp);
-}
-
-GrayImage* createPGM(int width, int height) {
-
-    GrayImage* img;
-
-    img = (GrayImage*)malloc(sizeof(GrayImage));
-
-    if (!img) {
-        fprintf(stderr, "malloc failure\n");
-        exit(1);
-    }
-
-    img->width = width;
-    img->height = height;
-    img->data = (unsigned char*)malloc( img->width * img->height * sizeof(unsigned char));
-
-    if (!img->data) {
-        fprintf(stderr, "malloc failure\n");
-        exit(1);
-    }
-    return img;
 }
 
 RGBImage* createPPM(int width, int height) {
@@ -226,12 +112,6 @@ RGBImage* createPPM(int width, int height) {
 }
 
 void destroyPPM(RGBImage* img) {
-
-    free(img->data);
-    free(img);
-}
-
-void destroyPGM(GrayImage* img) {
 
     free(img->data);
     free(img);

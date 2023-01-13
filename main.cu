@@ -1,247 +1,37 @@
 #include "imglib/img.h"
-#include <stdio.h>
-#include <stdlib.h>
-// #include <helper_cuda.h>
-#include <string>
+#include "cpulib/cpu.h"
+#include "gpulib/gpu.cuh"
+#include "standlib/stdCu.h"
 
 #define N 9
+
+#define DEBUG 1
 
 signed char sharpness[N] = {0, -1, 0, -1, 4, -1, 0, -1, 0};
 __constant__ float mask[N];
 
-void convCPU(char *input, char *output, char *kernel, const int width, const int heigth, const int dimKernel)
-{
-    for (int i = 0; i < width; i++)
-    {
-        for (int j = 0; j < heigth; j++)
-        {
-            int sum = 0;
-            for (int k = 0; k < dimKernel; k++)
-            {
-                for (int l = 0; l < dimKernel; l++)
-                {
-                    sum += input[(i + k) + (j + l) * width] * kernel[k * dimKernel + l];
-                }
-            }
-            output[i + j * width] = sum;
-        }
-    }
-}
-
-__global__ void convGPU(char *input, char *output, char *kernel, const int width, const int heigth, const int dimKernel)
-{
-    const int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= width)
-        return;
-    const int idy = blockIdx.y * blockDim.y + threadIdx.y;
-    if (idy >= heigth)
-        return;
-
-    int sum = 0;
-    for (int i = 0; i < dimKernel; i++)
-    {
-        for (int j = 0; j < dimKernel; j++)
-        {
-            sum += input[(idx + i) + (idy + j) * width] * kernel[i * dimKernel + j];
-        }
-    }
-    output[idx + idy * width] = sum;
-}
-
-void gaussianKernelCPU(const int gaussLength, const float gaussSigma, const char dimension, float *kernel)
-{
-    float sum = 0;
-    for (int i = 0; i < dimension; i++)
-    {
-        for (int j = 0; j < dimension; j++)
-        {
-            kernel[i * dimension + j] = exp(-((i - gaussLength / 2) * (i - gaussLength / 2) + (j - gaussLength / 2) * (j - gaussLength / 2)) / (2 * gaussSigma * gaussSigma));
-            sum += kernel[i * dimension + j];
-        }
-    }
-    for (int i = 0; i < dimension; i++)
-    {
-        for (int j = 0; j < dimension; j++)
-        {
-            kernel[i * dimension + j] /= sum;
-        }
-    }
-}
-
-__global__ void gaussianKernelGPU(const int gaussLength, const float gaussSigma, const char dimension, float *kernel)
-{
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= dimension * dimension)
-        return;
-
-    float sum = 0;
-
-    kernel[idx] = exp(-((idx / dimension - gaussLength / 2) * (idx / dimension - gaussLength / 2) + (idx % dimension - gaussLength / 2) * (idx % dimension - gaussLength / 2)) / (2 * gaussSigma * gaussSigma));
-    sum += kernel[idx];
-
-    __syncthreads();
-
-    kernel[idx] /= sum;
-}
-
-void zero_order_zoomingCPU(int *img, int *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height)
-{
-
-    int x_range_max;
-    int y_range_max;
-
-    int *zoomed = (int *)malloc(dimZoomX * dimZoomY * sizeof(int));
-    zoomed_out = (int *)malloc(width * height * sizeof(int));
-
-    if (x < 0 || y < 0 || x > width || y > height)
-    {
-        printf("Errore: coordinate fuori dai bordi dell'immagine");
-        return;
-    }
-
-    if (width - x < x)
-    {
-        x_range_max = width - x;
-    }
-    else
-    {
-        x_range_max = x;
-    }
-
-    if (height - y < y)
-    {
-        y_range_max = height - y;
-    }
-    else
-    {
-        y_range_max = y;
-    }
-
-    if (x_range_max < dimZoomX || y_range_max < dimZoomY)
-    {
-        printf("Errore: dimensione della maschera fuori dai bordi dell'immagine");
-        return;
-    }
-
-    for (int i = 0; i < dimZoomY; i++)
-        for (int j = 0; j < dimZoomX; j++)
-            zoomed[i * dimZoomX + j] = img[x + j + (y + i) * width];
-
-    float stuffing_bits_x = width / dimZoomX;
-    float stuffing_bits_y = height / dimZoomY;
-
-    int stuffing_x = (int)stuffing_bits_x;
-    int stuffing_y = (int)stuffing_bits_y;
-
-    int x_float_stuff = (int)100 / (stuffing_bits_x * 100 - stuffing_x * 100);
-    int y_float_stuff = (int)100 / (stuffing_bits_y * 100 - stuffing_y * 100);
-
-    int x_float_stuff_counter = 0;
-    int y_float_stuff_counter = 0;
-
-    for (int i = 0; i < height; i++)
-    {
-        for (int j = 0; j < width; j++)
-        {
-            zoomed_out[i * width + j] = zoomed[(i / stuffing_y) * dimZoomX + (j / stuffing_x)];
-            if (x_float_stuff_counter == x_float_stuff)
-            {
-                zoomed_out[i * width + j] = zoomed[(i / stuffing_y) * dimZoomX + (j / stuffing_x) + 1];
-                x_float_stuff_counter = 0;
-            }
-            if (y_float_stuff_counter == y_float_stuff)
-            {
-                zoomed_out[i * width + j] = zoomed[((i / stuffing_y) + 1) * dimZoomX + (j / stuffing_x)];
-                y_float_stuff_counter = 0;
-            }
-            x_float_stuff_counter++;
-            y_float_stuff_counter++;
-        }
-    }
-}
-
-__global__ void zero_order_zoomingGPU(int *img, int *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height)
-{
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= width)
-        return;
-    int idy = blockIdx.y * blockDim.y + threadIdx.y;
-    if (idy >= height)
-        return;
-
-    int x_range_max;
-    int y_range_max;
-
-    int *zoomed;
-    cudaMalloc(&zoomed, dimZoomX * dimZoomY * sizeof(int));
-
-    if (x < 0 || y < 0 || x > width || y > height)
-    {
-        printf("Errore: coordinate fuori dai bordi dell'immagine");
-        return;
-    }
-
-    if (width - x < x)
-    {
-        x_range_max = width - x;
-    }
-    else
-    {
-        x_range_max = x;
-    }
-
-    if (height - y < y)
-    {
-        y_range_max = height - y;
-    }
-    else
-    {
-        y_range_max = y;
-    }
-
-    if (x_range_max < dimZoomX || y_range_max < dimZoomY)
-    {
-        printf("Errore: dimensione della maschera fuori dai bordi dell'immagine");
-        return;
-    }
-
-    if (idx < dimZoomX && idy < dimZoomY)
-        zoomed[idy * dimZoomX + idx] = img[x + idx + (y + idy) * width];
-
-    float stuffing_bits_x = width / dimZoomX;
-    float stuffing_bits_y = height / dimZoomY;
-
-    int stuffing_x = (int)stuffing_bits_x;
-    int stuffing_y = (int)stuffing_bits_y;
-
-    int x_float_stuff = (int)100 / (stuffing_bits_x * 100 - stuffing_x * 100);
-    int y_float_stuff = (int)100 / (stuffing_bits_y * 100 - stuffing_y * 100);
-
-    int x_float_stuff_counter = 0;
-    int y_float_stuff_counter = 0;
-
-    __syncthreads();
-
-    if (idx < dimZoomX && idy < dimZoomY)
-    {
-        zoomed_out[idx * width + idy] = zoomed[(idx / stuffing_y) * dimZoomX + (idy / stuffing_x)];
-        if (x_float_stuff_counter == x_float_stuff)
-        {
-            zoomed_out[idx * width + idy] = zoomed[(idx / stuffing_y) * dimZoomX + (idy / stuffing_x) + 1];
-            x_float_stuff_counter = 0;
-        }
-        if (y_float_stuff_counter == y_float_stuff)
-        {
-            zoomed_out[idx * width + idy] = zoomed[((idx / stuffing_y) + 1) * dimZoomX + (idy / stuffing_x)];
-            y_float_stuff_counter = 0;
-        }
-        x_float_stuff_counter++;
-        y_float_stuff_counter++;
-    }
-}
-
 int main(int argc, char **argv)
 {
+    // Check GPU
+    int nDevices;
+    cudaError_t err = cudaGetDeviceCount(&nDevices);
+    if (err != cudaSuccess)
+    {
+        printf("%s\n", cudaGetErrorString(err));
+        return -1;
+    }
+    if (nDevices == 0)
+    {
+        printf("No CUDA device found\n");
+        return -1;
+    }
+    #if DEBUG  
+    printf("Number of CUDA devices: %d\n", nDevices);
+    #endif
+
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, 0);
+
     // Filter Setup
     switch (argc)
     {
@@ -307,13 +97,14 @@ int main(int argc, char **argv)
         }
         int gaussLength = (int)strtol(argv[6], NULL, 10);
         float gaussSigma = (float)strtof(argv[7], NULL);
-        if (gaussLength < 3 || gaussLength > 15 || gaussSigma < 0.5 || gaussSigma > 5)
+        if (gaussLength < 3 || gaussLength > 15 || gaussLength % 2 == 1 || gaussSigma < 0.5 || gaussSigma > 5)
         {
-            printf("Wrong Gaussian values:\nACCEPTED VALUES:\n\t 3 <= gaussLength <= 15\n\t 0.5 <= gaussSigma <= 5\nAborting...\n");
+            printf("Wrong Gaussian values:\nACCEPTED VALUES:\n\t 3 <= gaussLength (odd) <= 15\n\t 0.5 <= gaussSigma <= 5\nAborting...\n");
             return -1;
         }
         float *gaussKernel = (float *)malloc(N * sizeof(float));
-        gaussKernel = gaussianKernel(gaussLength, gaussSigma);
+        gaussianKernelCPU(3, gaussSigma, gaussKernel);
+        //gaussianKernelCPU(gaussLength, gaussSigma, gaussKernel);   // needed when dynamic approach used
         cudaMemcpyToSymbol(mask, gaussKernel, N * sizeof(float));
         free(gaussKernel);
     }
@@ -336,7 +127,9 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    #if DEBUG
     printf("DimX: %d, DimY: %d, dimZoom: %d\n", dimX, dimY, dimZoom);
+    #endif
 
     // Check input file ends with .ppm
     if (std::string(argv[1]).size() < 4 || std::string(argv[1]).substr(std::string(argv[1]).size() - 4) != ".ppm")
@@ -394,32 +187,32 @@ int main(int argc, char **argv)
     cudaMemcpy(d_start, startingMatrix, inConvDim * inConvDim * 3 * sizeof(char), cudaMemcpyHostToDevice);
     free(startingMatrix);
 
-    // Check GPU
-    int nDevices;
-    cudaError_t err = cudaGetDeviceCount(&nDevices);
-    if (err != cudaSuccess)
-    {
-        printf("%s\n", cudaGetErrorString(err));
-        return -1;
-    }
-
-    cudaDeviceProp prop;
-    cudaGetDeviceProperties(&prop, 0);
-    const int maxThreads = prop.maxThreadsPerBlock;
+    
+    const int neededThreads = dimZoom * 3 * dimZoom;
+    const short usedThreads = (neededThreads > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : neededThreads; 
     // calcolo numero blocchi necessari
-    const int blockCeiling = (dimZoom * 3 * dimZoom / maxThreads) + 1;
+    const int usedBlocks = (neededThreads / prop.maxThreadsPerBlock) + 1;
     // controllo numero blocchi utilizzabili
-    if (blockCeiling > prop.maxGridSize[0])
+    if (usedBlocks > prop.maxGridSize[0])
     {
         printf("%s\n", cudaGetErrorString(err));
         return -1;
     }
+    #if DEBUG
+    printf("Used Threads: %d - Used Blocks: %d\n", usedThreads, usedBlocks);
+    #endif
+    #if DEBUG
+    printf("END OF CPU INSTRUCTIONS\n\n");
+    #endif
 
     // chiamata kernel:passiamo ritaglio iniziale, output, dim ritaglio iniziale, dim output, dim maschera, numero pixel output (non passiamo maschera perchè è già in memoria costante)
-    resizer<<<blockCeiling, maxThreads>>>(d_start, d_scale, inConvDim, outScaleDim, dimZoom, pxCount);
-    // convGPU<<<blockCeiling, maxThreads>>>(d_start, d_scale, dimZoom*dimZoom*3, pxCount);
-    cudaMemcpy(imgScaled->data, d_scale, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
+    //resizer<<<usedBlocks, maxThreads>>>(d_start, d_scale, inConvDim, outScaleDim, dimZoom, pxCount);
+    // convGPU<<<usedBlocks, maxThreads>>>(d_start, d_scale, dimZoom*dimZoom*3, pxCount);
+    zero_order_zoomingGPU<<<usedBlocks, usedThreads>>>(d_start, d_scale, dimZoom, dimZoom, dimX, dimY, outScaleDim, outScaleDim);
     cudaDeviceSynchronize();
+    //convGPU<<<usedBlocks, usedThreads>>>(d_scale, d_start, outScaleDim * 3);
+    //cudaDeviceSynchronize();
+    cudaMemcpy(imgScaled->data, d_scale, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
 
     cudaFree(d_start);
     cudaFree(d_scale);

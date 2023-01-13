@@ -97,7 +97,7 @@ void zero_order_zoomingCPU(unsigned char *img, unsigned char *zoomed_out, int di
             zoomed_out[i * outDim * 3 + j * 3 + 1] = zoomed[(i / stuffing + 1) * dimZoomX * 3 + (j / stuffing + 1) * 3 + 1];
             zoomed_out[i * outDim * 3 + j * 3 + 2] = zoomed[(i / stuffing + 1) * dimZoomX * 3 + (j / stuffing + 1) * 3 + 2];
         }
-
+    free(zoomed);
     // First version, works but not parallelizable, it refers to the smaller matrix and copies the same values cnt times
     /*for (int i = 0; i < dimZoomY; i++)
         for (int j = 0; j < dimZoomX; j++)

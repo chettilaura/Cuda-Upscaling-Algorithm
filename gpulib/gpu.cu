@@ -1,6 +1,6 @@
 #include "gpu.cuh"
 
-__global__ void zero_order_zoomingGPU(char *img, char *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height)
+__global__ void zero_order_zoomingGPU(char *img, char *zoomed, char *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height, int outDim)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= width)
@@ -9,76 +9,52 @@ __global__ void zero_order_zoomingGPU(char *img, char *zoomed_out, int dimZoomX,
     if (idy >= height)
         return;
 
-    int x_range_max;
-    int y_range_max;
-
-    int *zoomed;
-    cudaMalloc(&zoomed, dimZoomX * dimZoomY * sizeof(int));
+    if (idx < dimZoomX*3 && idy < dimZoomY*3)
+        zoomed[(idy + 1) * dimZoomX + (idx + 1)] = img[(x + idx) + (y + idy) * width];
 
 
-    if (x < 0 || y < 0 || x > width || y > height)
-    {
-        printf("Errore: coordinate fuori dai bordi dell'immagine");
-        return;
-    }
 
-    if (width - x < x)
-    {
-        x_range_max = width - x;
-    }
-    else
-    {
-        x_range_max = x;
-    }
-
-    if (height - y < y)
-    {
-        y_range_max = height - y;
-    }
-    else
-    {
-        y_range_max = y;
-    }
-
-    if (x_range_max < dimZoomX || y_range_max < dimZoomY)
-    {
-        printf("Errore: dimensione della maschera fuori dai bordi dell'immagine");
-        return;
-    }
-    if (idx < dimZoomX && idy < dimZoomY)
-        zoomed[idy * dimZoomX + idx] = img[x + idx + (y + idy) * width];
-
-    float stuffing_bits_x = width / dimZoomX;
-    float stuffing_bits_y = height / dimZoomY;
-    printf("prima di synch thread");
-
-    int stuffing_x = (int)stuffing_bits_x;
-    int stuffing_y = (int)stuffing_bits_y;
-
-    int x_float_stuff = (int)100 / (stuffing_bits_x * 100 - stuffing_x * 100);
-    int y_float_stuff = (int)100 / (stuffing_bits_y * 100 - stuffing_y * 100);
-
-    int x_float_stuff_counter = 0;
-    int y_float_stuff_counter = 0;
+    int stuffing = outDim / dimZoomX;
     __syncthreads();
+    //printf("%d\n", img[(idx + x)+ dimZoomX * (idy + y)]);
+    //printf("%d\n", zoomed[(idx / stuffing + 1) * dimZoomX * 3 + (idy / stuffing + 1) * 3 + idx % 3]);
+    //zoomed_out[idx * outDim * 3 + idy * 3 + idx % 3 ] = zoomed[(idx / stuffing + 1) * dimZoomX * 3 + (idy / stuffing + 1) * 3 + idx % 3];
 
-    if (idx < dimZoomX && idy < dimZoomY)
-    {
-        zoomed_out[idx * width + idy] = zoomed[(idx / stuffing_y) * dimZoomX + (idy / stuffing_x)];
-        if (x_float_stuff_counter == x_float_stuff)
-        {
-            zoomed_out[idx * width + idy] = zoomed[(idx / stuffing_y) * dimZoomX + (idy / stuffing_x) + 1];
-            x_float_stuff_counter = 0;
-        }
-        if (y_float_stuff_counter == y_float_stuff)
-        {
-            zoomed_out[idx * width + idy] = zoomed[((idx / stuffing_y) + 1) * dimZoomX + (idy / stuffing_x)];
-            y_float_stuff_counter = 0;
-        }
-        x_float_stuff_counter++;
-        y_float_stuff_counter++;
-    }
-    printf("arrivato alla fine");
+    zoomed_out[idy * outDim + idx] = zoomed[(idy / stuffing + 1) * dimZoomX + (idx / stuffing + 1)];
+    //printf("%d\n", zoomed_out[idy * outDim + idx]);
+   //zoomed_out[idx + idy * outDim] = zoomed[(idx / stuffing + 1) + (idy / stuffing + 1) * dimZoomX];
+
+}
+
+//ritaglio avvenuto lato CPU
+__global__ void scaleGPU(char *zoomed, char *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height, int outDim)
+{
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int stuffing = outDim / dimZoomX * 3;
+    // DimZoom is the dimension of small image, outDim is the dimension of the big image, stuffing is the number of bytes to repeat
+    if(idx < outDim*3*outDim)   // idx in zoomed out 1200 deve essere uguale a 300
+        
+        
+        zoomed_out[idx] = zoomed[ idx/stuffing*3 + idx % 3  ];
+        
+            //ispiration da cpu:
+           // zoomed_out[i * outDim * 3 + j * 3] = zoomed[(i / stuffing ) * dimZoomX * 3 + (j / stuffing +) * 3];
+
+            //relazione
+           //i->idx
+           //j->idx/(outDim*3)
+
+    //printf("idx: %d, idy: %d", idx, idy);
+    /*if( idx<(outDim*3*outDim) )
+        zoomed_out[idx * outDim * 3 + j * 3] = zoomed[(i / stuffing + 1) * dimZoomX * 3 + (j / stuffing + 1) * 3];*/
+        //zoomed_out[idx] = zoomed[(idx / stuffing + 1) * dimZoomX + (idx / stuffing + 1) + idx % 3];
+        //zoomed_out[idx] = zoomed[idx];
+        //zoomed_out[idx] = 255;//zoomed[idy*dimZoomX+idx];
+        //zoomed_out[idy * outDim + idx] = zoomed[(idy / stuffing + 1) * dimZoomX + (idx / stuffing + 1)];
+    
+    
+    __syncthreads();
+    //zoomed_out[idy * outDim + idx] = zoomed[(idy / stuffing + 1) * dimZoomX + (idx / stuffing + 1)];
 }
 
 __global__ void gaussianKernelGPU(const int gaussLength, const float gaussSigma, const char dimension, float *kernel)

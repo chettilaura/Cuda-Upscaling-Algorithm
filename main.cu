@@ -170,12 +170,10 @@ int main(int argc, char **argv)
         return -1;
     }
     
-    const int outScaleDim = (img->width >= img->height) ? img->width : img->height;
+    const int outScaleDim = (img->width >= img->height) ? ((int)img->height/dimZoom)*dimZoom : ((int)img->width/dimZoom)*dimZoom;
 
     RGBImage *imgScaled = createPPM(outScaleDim, outScaleDim);
-
-    zero_order_zoomingCPU(img->data, imgScaled->data, dimZoom, dimZoom, dimX, dimY, img->width, img->height, outScaleDim);
-    writePPM("output.ppm", imgScaled);
+    zero_order_zoomingCPU(img->data, imgScaled->data, dimZoom, dimZoom, dimX, dimY, img->width, img->height, imgScaled->width);
     // Selection
     /*const int inConvDim = dimZoom + 2;
     const int outScaleDim = (img->width >= img->height) ? img->width : img->height;
@@ -190,6 +188,9 @@ int main(int argc, char **argv)
             startingMatrix[(i + 1) * inConvDim * 3 + (j + 1) * 3 + 1] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3 + 1];
             startingMatrix[(i + 1) * inConvDim * 3 + (j + 1) * 3 + 2] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3 + 2];
         }
+        
+        
+        
     destroyPPM(img);
 
     char *d_start, *d_scale;
@@ -224,7 +225,7 @@ int main(int argc, char **argv)
     //convGPU<<<usedBlocks, usedThreads>>>(d_scale, d_start, outScaleDim * 3);
     //cudaDeviceSynchronize();
     cudaMemcpy(imgScaled->data, d_scale, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
-
+    
     cudaFree(d_start);
     cudaFree(d_scale);*/
     printf("well done");
@@ -232,6 +233,5 @@ int main(int argc, char **argv)
     // Print output
     writePPM("output.ppm", imgScaled);
     destroyPPM(imgScaled);
-
     return 0;
 }

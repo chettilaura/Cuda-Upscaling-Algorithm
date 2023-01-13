@@ -1,5 +1,4 @@
 #include "cpu.h"
-#include "../standlib/stdCu.h"
 
 void convCPU(char *input, char *output, char *kernel, const int width, const int heigth)
 {
@@ -49,9 +48,9 @@ void zero_order_zoomingCPU(unsigned char *img, unsigned char *zoomed_out, int di
     int x_range_max;
     int y_range_max;
 
-    int *zoomed = (int *)malloc(dimZoomX * dimZoomY * sizeof(int));
+    int *zoomed = (int *)malloc(dimZoomX * 3 * dimZoomY * sizeof(int));
 
-    if (x < 0 || y < 0 || x > width || y > height)
+    /*if (x < 0 || y < 0 || x > width || y > height)
     {
         printf("Errore: coordinate fuori dai bordi dell'immagine");
         return;
@@ -79,41 +78,38 @@ void zero_order_zoomingCPU(unsigned char *img, unsigned char *zoomed_out, int di
     {
         printf("Errore: dimensione della maschera fuori dai bordi dell'immagine");
         return;
-    }
+    }*/
 
     for (int i = 0; i < dimZoomY; i++)
-        for (int j = 0; j < dimZoomX; j++)
-            zoomed[i * dimZoomX + j] = img[x + j + (y + i) * width];
+        for (int j = 0; j < dimZoomX; j++){
+            zoomed[(i + 1) * dimZoomX * 3 + (j + 1) * 3] = img[(x + j) * 3 + (y + i) * width * 3];
+            zoomed[(i + 1) * dimZoomX * 3 + (j + 1) * 3 + 1] = img[(x + j) * 3 + (y + i) * width * 3 + 1];
+            zoomed[(i + 1) * dimZoomX * 3 + (j + 1) * 3 + 2] = img[(x + j) * 3 + (y + i) * width * 3 + 2];
+        }
 
-    float stuffing_bits_x = width / dimZoomX;
-    float stuffing_bits_y = height / dimZoomY;
-
-    int stuffing_x = (int)stuffing_bits_x;
-    int stuffing_y = (int)stuffing_bits_y;
-
-    int x_float_stuff = (int)100 / (stuffing_bits_x * 100 - stuffing_x * 100);
-    int y_float_stuff = (int)100 / (stuffing_bits_y * 100 - stuffing_y * 100);
-
-    int x_float_stuff_counter = 0;
-    int y_float_stuff_counter = 0;
-
+    // Second version for CPU, works, better parallelizable.
+    // It refers to the bigger matrix and exploit the rounding down to refers to the same byte to copy to different positions
+    int stuffing = outDim / dimZoomX;
     for (int i = 0; i < outDim; i++)
-    {
         for (int j = 0; j < outDim; j++)
         {
-            zoomed_out[i * outDim + j] = zoomed[(i / stuffing_y) * dimZoomX + (j / stuffing_x)];
-            if (x_float_stuff_counter == x_float_stuff)
-            {
-                zoomed_out[i * outDim + j] = zoomed[(i / stuffing_y) * dimZoomX + (j / stuffing_x) + 1];
-                x_float_stuff_counter = 0;
-            }
-            if (y_float_stuff_counter == y_float_stuff)
-            {
-                zoomed_out[i * outDim + j] = zoomed[((i / stuffing_y) + 1) * dimZoomX + (j / stuffing_x)];
-                y_float_stuff_counter = 0;
-            }
-            x_float_stuff_counter++;
-            y_float_stuff_counter++;
+            zoomed_out[i * outDim * 3 + j * 3] = zoomed[(i / stuffing + 1) * dimZoomX * 3 + (j / stuffing + 1) * 3];
+            zoomed_out[i * outDim * 3 + j * 3 + 1] = zoomed[(i / stuffing + 1) * dimZoomX * 3 + (j / stuffing + 1) * 3 + 1];
+            zoomed_out[i * outDim * 3 + j * 3 + 2] = zoomed[(i / stuffing + 1) * dimZoomX * 3 + (j / stuffing + 1) * 3 + 2];
         }
-    }
+
+    // First version, works but not parallelizable, it refers to the smaller matrix and copies the same values cnt times
+    /*for (int i = 0; i < dimZoomY; i++)
+        for (int j = 0; j < dimZoomX; j++)
+        {
+            for (int cnt = 0; cnt < stuffing_y; cnt++)
+            {
+                for (int cnt2 = 0; cnt2 < stuffing_y; cnt2++)
+                {
+                    zoomed_out[(i * stuffing_y + cnt) * outDim * 3 + (j * stuffing_y + cnt2) * 3] = zoomed[(i + 1) * dimZoomX * 3 + (j + 1) * 3];
+                    zoomed_out[(i * stuffing_y + cnt) * outDim * 3 + (j * stuffing_y + cnt2) * 3 + 1] = zoomed[(i + 1) * dimZoomX * 3 + (j + 1) * 3 + 1];
+                    zoomed_out[(i * stuffing_y + cnt) * outDim * 3 + (j * stuffing_y + cnt2) * 3 + 2] = zoomed[(i + 1) * dimZoomX * 3 + (j + 1) * 3 + 2];
+                }
+            }
+        }*/
 }

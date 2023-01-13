@@ -1,3 +1,6 @@
+#ifndef _INC_IMG // include guard for 3rd party interop
+#define _INC_IMG
+
 #pragma once
 //
 // Created by Corrado on 11/17/2022.
@@ -17,4 +20,6 @@ RGBImage* createPPM(int width, int height);
 void destroyPPM(RGBImage* img);
 
 void writePPM(const char* filename, RGBImage* img);
+
+#endif //IMG_H
 

@@ -24,9 +24,9 @@ int main(int argc, char **argv)
         printf("No CUDA device found\n");
         return -1;
     }
-    #if DEBUG  
+#if DEBUG
     printf("Number of CUDA devices: %d\n", nDevices);
-    #endif
+#endif
 
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, 0);
@@ -56,7 +56,8 @@ int main(int argc, char **argv)
     case 6:
     {
         int mode = (int)strtol(argv[5], NULL, 10);
-        if (mode == 0){
+        if (mode == 0)
+        {
             cudaMemcpy(&d_mask, sharpness, N * sizeof(float), cudaMemcpyHostToDevice);
             maskDim = N;
         }
@@ -132,9 +133,9 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    #if DEBUG
+#if DEBUG
     printf("DimX: %d, DimY: %d, dimZoom: %d\n", dimX, dimY, dimZoom);
-    #endif
+#endif
 
     // Check input file ends with .ppm
     if (std::string(argv[1]).size() < 4 || std::string(argv[1]).substr(std::string(argv[1]).size() - 4) != ".ppm")
@@ -169,89 +170,85 @@ int main(int argc, char **argv)
         printf("Error: X mask outside image boundaries");
         return -1;
     }
-    
-    const int outScaleDim = (img->width >= img->height) ? ((int)img->height/dimZoom)*dimZoom : ((int)img->width/dimZoom)*dimZoom;
 
-    //RGBImage *imgScaled = createPPM(outScaleDim, outScaleDim);
-    //zero_order_zoomingCPU(img->data, imgScaled->data, dimZoom, dimZoom, dimX, dimY, img->width, img->height, imgScaled->width);
-    // Selection
-    const int inConvDim = dimZoom + 2;
-    //const int outScaleDim = (img->width >= img->height) ? img->width : img->height;
+    const int outScaleDim = (img->width >= img->height) ? ((int)img->height / dimZoom) * dimZoom : ((int)img->width / dimZoom) * dimZoom;
     const int pxCount = outScaleDim * outScaleDim * 3;
-    RGBImage *imgScaled = createPPM(outScaleDim, outScaleDim);
-    /*unsigned char *startingMatrix = (unsigned char *)malloc(inConvDim * inConvDim * 3 * sizeof(unsigned char));
 
-    for (int i = 0; i < dimZoom; i++)
-        for (int j = 0; j < dimZoom; j++)
-        {
-            startingMatrix[(i + 1) * inConvDim * 3 + (j + 1) * 3] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3];
-            startingMatrix[(i + 1) * inConvDim * 3 + (j + 1) * 3 + 1] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3 + 1];
-            startingMatrix[(i + 1) * inConvDim * 3 + (j + 1) * 3 + 2] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3 + 2];
-        }
-        
-        
-        
-    destroyPPM(img);
-*/
     char *d_start, *d_scale, *d_zoom;
     cudaMalloc((void **)&d_start, pxCount * sizeof(char));
     cudaMalloc((void **)&d_scale, pxCount * sizeof(char));
     cudaMalloc((void **)&d_zoom, dimZoom * 3 * dimZoom * sizeof(char));
     cudaMemcpy(d_start, img->data, pxCount * sizeof(char), cudaMemcpyHostToDevice);
-    //free(startingMatrix);
 
-    
-    const int neededThreads = pxCount;
-    const short usedThreads = (neededThreads > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : neededThreads; 
+    int neededThreads = dimZoom * dimZoom * 3;
+    int usedThreads = (neededThreads > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : neededThreads;
     // calcolo numero blocchi necessari
-    const int usedBlocks = (neededThreads / prop.maxThreadsPerBlock) + 1;
+    int usedBlocks = (neededThreads / prop.maxThreadsPerBlock) + 1;
     // controllo numero blocchi utilizzabili
     if (usedBlocks > prop.maxGridSize[0])
     {
         printf("%s\n", cudaGetErrorString(err));
         return -1;
     }
-    #if DEBUG
+#if DEBUG
     printf("Used Threads: %d - Used Blocks: %d\n", usedThreads, usedBlocks);
-    #endif
-    #if DEBUG
+#endif
+#if DEBUG
     printf("END OF CPU INSTRUCTIONS\n\n");
-    #endif
+#endif
 
-    // chiamata kernel:passiamo ritaglio iniziale, output, dim ritaglio iniziale, dim output, dim maschera, numero pixel output (non passiamo maschera perchè è già in memoria costante)
-    //resizer<<<usedBlocks, maxThreads>>>(d_start, d_scale, inConvDim, outScaleDim, dimZoom, pxCount);
-    // convGPU<<<usedBlocks, maxThreads>>>(d_start, d_scale, dimZoom*dimZoom*3, pxCount);
-
-    //zero_order_zoomingGPU<<<usedBlocks, usedThreads>>>(d_start, d_zoom, d_scale, dimZoom, dimZoom, dimX, dimY, img->width, img->height, outScaleDim);
-    
-    RGBImage *imgS = createPPM(dimZoom, dimZoom);
-
-    //zero_order_zoomingCPU(img->data, imgS->data, dimZoom, dimZoom, dimX, dimY, img->width, img->height, imgScaled->width);
-    //Il ritaglio funziona
-    for (int i = 0; i < dimZoom; i++)
-        for (int j = 0; j < dimZoom; j++)
-        {
-            imgS->data[(i) * dimZoom * 3 + (j ) * 3] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3];
-            imgS->data[(i) * dimZoom * 3 + (j) * 3 + 1] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3 + 1];
-            imgS->data[(i) * dimZoom * 3 + (j ) * 3 + 2] = img->data[(pointX + j) * 3 + (pointY + i) * img->width * 3 + 2];
-        }
-    writePPM("resizCPU.ppm", imgS);
-    // crasha qui
-    checkCudaErrors(cudaMemcpy(d_zoom, imgS->data, dimZoom * dimZoom * 3 * sizeof(char), cudaMemcpyHostToDevice));
-    scaleGPU<<<usedBlocks, usedThreads>>>(d_zoom, d_scale, dimZoom, dimZoom, dimX, dimY, img->width, img->height, outScaleDim);
-    printf("hey\n");
-    checkCudaErrors(cudaDeviceSynchronize());
-    printf("hey\n");
-    //convGPU<<<usedBlocks, usedThreads>>>(d_scale, d_start, outScaleDim * 3);
-    //cudaDeviceSynchronize();
-    cudaMemcpy(imgScaled->data, d_scale, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
-    
+    // Get the cutout of the image
+    getCutout<<<usedBlocks, usedThreads>>>(d_start, d_zoom, pointY, pointX, img->width, dimZoom, dimZoom);
+    cudaDeviceSynchronize();
+    destroyPPM(img);
     cudaFree(d_start);
+#if DEBUG
+    RGBImage *imgCut = createPPM(dimZoom, dimZoom);
+    cudaMemcpy(imgCut->data, d_zoom, dimZoom * dimZoom * 3 * sizeof(char), cudaMemcpyDeviceToHost);
+    writePPM("DEBUG_cutout.ppm", imgCut);
+    destroyPPM(imgCut);
+    printf("\tDone Scaling\n");
+#endif
+
+    // Zooming
+    usedThreads = (pxCount > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : pxCount;
+    usedBlocks = (pxCount / prop.maxThreadsPerBlock) + 1;
+    if (usedBlocks > prop.maxGridSize[0])
+    {
+        printf("%s\n", cudaGetErrorString(err));
+        return -1;
+    }
+    scaleGPU<<<usedBlocks, usedThreads>>>(d_zoom, d_scale, dimZoom, outScaleDim);
+    cudaDeviceSynchronize();
+    cudaFree(d_zoom);
+#if DEBUG
+    RGBImage *imgScale = createPPM(outScaleDim, outScaleDim);
+    cudaMemcpy(imgScale->data, d_scale, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
+    writePPM("DEBUG_scaled.ppm", imgScale);
+    destroyPPM(imgScale);
+    printf("\tDone Zooming\n");
+#endif
+
+    // Convolution
+    char *d_out;
+    cudaMalloc((void **)&d_out, pxCount * sizeof(char));
+    // convGPU<<<usedBlocks, usedThreads>>>(d_scale, d_out, outScaleDim * 3);
+    cudaDeviceSynchronize();
+#if DEBUG
+    printf("\tDone Convoluting\nEND OF GPU INSTRUCTIONS\n\n");
+#endif
+
+    RGBImage *imgOut = createPPM(outScaleDim, outScaleDim);
+    cudaMemcpy(imgOut->data, d_out, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
     cudaFree(d_scale);
-    printf("well done");
+    cudaFree(d_out);
 
     // Print output
-    writePPM("output.ppm", imgScaled);
-    destroyPPM(imgScaled);
+    writePPM("output.ppm", imgOut);
+    destroyPPM(imgOut);
+
+#if DEBUG
+    printf("END OF THE PROGRAM\n\n");
+#endif
     return 0;
 }

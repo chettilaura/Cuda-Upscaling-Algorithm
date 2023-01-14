@@ -1,35 +1,41 @@
 #include "gpu.cuh"
 
-__global__ void zero_order_zoomingGPU(char *img, char *zoomed, char *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height, int outDim)
+__global__ void getCutout(char *img, char *cutout, int stpntY, int stpntX, int width, int dimCutX, int dimCutY)
+{
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // in the index calculus the first part shows the line, the second the column the third the color
+    if(idx < dimCutX*dimCutY*3)
+        cutout[idx] = img[(stpntY * width + stpntX)*3 + idx/(dimCutX*3) * width * 3 + idx % (dimCutX*3)];
+
+    __syncthreads();
+}
+
+__global__ void scaleGPU(char *cutout, char *scaled, int dimCut, int dimScaled)
+{
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int stuffing = dimScaled / dimCut * 3;
+
+    // In the index calculus the first part shows the line, the second the column the third the color
+    if(idx < dimScaled*dimScaled*3)   
+        scaled[idx] = cutout[idx/dimScaled/stuffing*dimCut*3 + (idx/3 % dimScaled)/stuffing*9 + idx % 3];
+    
+    __syncthreads();
+}
+
+
+__global__ void zero_order_zoomingGPU(char *img, char *zoomed, char *zoomed_out, int dimZoomX, int dimZoomY, int stpntX, int stpntY, int width, int height, int outDim, int stuffing)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= outDim * 3* outDim)
         return;
 
     if(idx < dimZoomX*dimZoomY*3)
-        zoomed[idx] = img[ (idx/3 % dimZoomX)*3 + (idx/3 / dimZoomX)*dimZoomX*3 + idx % 3 ];
+        zoomed[idx] = img[(stpntY * width + stpntX)*3 + idx/(dimZoomX*3) * width * 3 + idx % (dimZoomX*3)];
 
-
-
-    int stuffing = outDim / dimZoomX;
     __syncthreads();
 
     zoomed_out[idx] = zoomed[ idx/outDim/stuffing*dimZoomX*3 + (idx/3 % outDim)/stuffing*9 + idx % 3 ];
-
-}
-
-//ritaglio avvenuto lato CPU
-__global__ void scaleGPU(char *zoomed, char *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height, int outDim)
-{
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int stuffing = outDim / dimZoomX * 3;
-
-    // La prima parte di zoomed indica la riga, la seconda la colonna la terza il colore
-    if(idx < outDim*3*outDim)   
-        zoomed_out[idx] = zoomed[ idx/outDim/stuffing*dimZoomX*3 + (idx/3 % outDim)/stuffing*9 + idx % 3 ];
-    
-
-    __syncthreads();
 }
 
 __global__ void gaussianKernelGPU(const int gaussLength, const float gaussSigma, const char dimension, float *kernel)

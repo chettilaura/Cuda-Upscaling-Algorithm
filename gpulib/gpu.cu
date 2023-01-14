@@ -7,14 +7,14 @@ __global__ void zero_order_zoomingGPU(char *img, char *zoomed, char *zoomed_out,
         return;
 
     if(idx < dimZoomX*dimZoomY*3)
-        zoomed[idx] = img[idx/3/dimZoomX*3*width + ((idx/3) % dimZoomX)*3 + idx % 3];
+        zoomed[idx] = img[ (idx/3 % dimZoomX)*3 + (idx/3 / dimZoomX)*dimZoomX*3 + idx % 3 ];
 
 
 
     int stuffing = outDim / dimZoomX;
     __syncthreads();
 
-    zoomed_out[idx] = zoomed[ idx/3/outDim/stuffing*dimZoomX*3 + ((idx/3) % outDim)/stuffing*3 + idx % 3 ];
+    zoomed_out[idx] = zoomed[ idx/outDim/stuffing*dimZoomX*3 + (idx/3 % outDim)/stuffing*9 + idx % 3 ];
 
 }
 
@@ -25,9 +25,9 @@ __global__ void scaleGPU(char *zoomed, char *zoomed_out, int dimZoomX, int dimZo
     int stuffing = outDim / dimZoomX * 3;
 
     // La prima parte di zoomed indica la riga, la seconda la colonna la terza il colore
-    // viene zoommata solo una porzione dell'immagine
-    if(idx < outDim*3*outDim)   // idx in zoomed out 1200 deve essere uguale a 300
-        zoomed_out[idx] = zoomed[ idx/3/outDim/stuffing*dimZoomX*3 + ((idx/3) % outDim)/stuffing*3 + idx % 3 ];
+    if(idx < outDim*3*outDim)   
+        zoomed_out[idx] = zoomed[ idx/outDim/stuffing*dimZoomX*3 + (idx/3 % outDim)/stuffing*9 + idx % 3 ];
+    
 
     __syncthreads();
 }

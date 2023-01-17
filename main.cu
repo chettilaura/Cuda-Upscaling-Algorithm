@@ -4,10 +4,7 @@
 #include "standlib/stdCu.h"
 
 #define N 9
-
 #define DEBUG 1
-
-signed char sharpness[N] = {0, -1, 0, -1, 4, -1, 0, -1, 0};
 
 int main(int argc, char **argv)
 {
@@ -32,7 +29,6 @@ int main(int argc, char **argv)
     cudaGetDeviceProperties(&prop, 0);
 
     // Mask variables
-    float *d_mask;
     char maskDim = 0;
 
     // Filter Setup
@@ -42,7 +38,7 @@ int main(int argc, char **argv)
     case 2:
         if (argv[1] == std::string("-h") || argv[1] == std::string("--help"))
         {
-            printf("Usage: %s inputFile.ppm DimX DimY dimZoom mode [GaussLength GaussSigma]\n\nWhere:\n\tDimX: X coordinate of the center of the selection zone\n\tDimY: Y coordinate of the center of the selection zone\n\tdimZoom: Length of the side of the selection mask which has a square shape\n\tmode: 0 for Sharpness filter, 1 for Gaussian*, 2 for custom 3x3 Kernel*\n*Input required from the user\n", argv[0]);
+            printf("Usage: %s inputFile.ppm DimX DimY dimZoom mode (GaussLength GaussSigma) OR InputKernelFile.txt\n\nWhere:\n\tDimX: X coordinate of the center of the selection zone\n\tDimY: Y coordinate of the center of the selection zone\n\tdimZoom: Length of the side of the selection mask which has a square shape\n\tmode: 0 for Gaussian filter, 1  for custom kernel loaded from file\n\n\tGaussLength: must be an odd value from 3 to 15 sides include\n\tGaussSigma: must be a value from 0.5 to 5 sides included\n\n\tInputKernelFile.txt: formatted as such\n\n\t\t\tmatrixSide'sLength\n\t\t\tFirstElement SecondElement ...\n\t\t\tRowElement ...\n\t\t\t...\n", argv[0]);
             return 0;
         }
         else
@@ -52,49 +48,8 @@ int main(int argc, char **argv)
         }
         break;
 
-    // Sharpness or Custom Kernel
-    case 6:
-    {
-        int mode = (int)strtol(argv[5], NULL, 10);
-        if (mode == 0)
-        {
-            cudaMemcpy(&d_mask, sharpness, N * sizeof(float), cudaMemcpyHostToDevice);
-            maskDim = N;
-        }
-        else if (mode == 2)
-        {
-            printf("Insert the 3x3 kernel values, from left to right, from top to bottom to a single line where each value is separated by a space\n");
-            const char M = N * 4;
-            char buff[M];
-            fgets(buff, M, stdin);
-
-            // Check input
-            int bLength = strlen(buff);
-            if (bLength < 18) // 9 values, 8 spaces
-            {
-                printf("Wrong input. Use -h or --help for more information\n");
-                return -1;
-            }
-            float *kernel = (float *)malloc(N * sizeof(float));
-            if (sscanf(buff, "%f %f %f %f %f %f %f %f %f", &kernel[0], &kernel[1], &kernel[2], &kernel[3], &kernel[4], &kernel[5], &kernel[6], &kernel[7], &kernel[8]) != 9)
-            {
-                printf("Wrong input. Use -h or --help for more information\n");
-                return -1;
-            }
-            cudaMemcpy(&d_mask, kernel, N * sizeof(float), cudaMemcpyHostToDevice);
-            maskDim = N;
-            free(kernel);
-        }
-        else
-        {
-            printf("Wrong command line input. Use -h or --help for more information\n");
-            return -1;
-        }
-    }
-    break;
-
-    // Gaussian
-    case 8:
+    // Custom Kernel from file
+    case 7:
     {
         int mode = (int)strtol(argv[5], NULL, 10);
         if (mode != 1)
@@ -102,16 +57,75 @@ int main(int argc, char **argv)
             printf("Wrong command line input. Do not input gaussian data for non-gaussian matrices. Use -h or --help for more information\n");
             return -1;
         }
+        FILE *kernelFile = fopen(argv[6], "r");
+        if (kernelFile == NULL)
+        {
+            printf("Error opening file %s\n", argv[6]);
+            return -1;
+        }
+
+        // Read file
+        char buff[120];
+        fgets(buff, 100, kernelFile);
+        maskDim = (char)strtol(buff, NULL, 10);
+        if (maskDim < 3 || maskDim > 15 || maskDim % 2 == 0)
+        {
+            printf("Wrong mask dimension. Use -h or --help for more information\n");
+            return -1;
+        }
+
+        // Allocate memory
+        float *kernel = (float *)malloc(maskDim * maskDim * sizeof(float));
+        for (int i = 0; i < maskDim; i++)
+        {
+            fgets(buff, 120, kernelFile);
+            if (sscanf(buff, "%f %f %f %f %f %f %f %f %f", &kernel[i * maskDim], &kernel[i * maskDim + 1], &kernel[i * maskDim + 2], &kernel[i * maskDim + 3], &kernel[i * maskDim + 4], &kernel[i * maskDim + 5], &kernel[i * maskDim + 6], &kernel[i * maskDim + 7], &kernel[i * maskDim + 8]) != maskDim)
+            {
+                printf("Wrong input. Use -h or --help for more information\n");
+                return -1;
+            }
+        }
+        fclose(kernelFile);
+
+        // Copy to device
+        loadKernel(kernel, maskDim);
+        free(kernel);
+    }
+    break;
+
+    // Gaussian
+    case 8:
+    {
+        int mode = (int)strtol(argv[5], NULL, 10);
+        if (mode != 0)
+        {
+            printf("Wrong command line input. Do not input gaussian data for non-gaussian matrices. Use -h or --help for more information\n");
+            return -1;
+        }
         int gaussLength = (int)strtol(argv[6], NULL, 10);
         float gaussSigma = (float)strtof(argv[7], NULL);
-        if (gaussLength < 3 || gaussLength > 15 || gaussLength % 2 == 1 || gaussSigma < 0.5 || gaussSigma > 5)
+        if (gaussLength < 3 || gaussLength > 15 || gaussLength % 2 == 0 || gaussSigma < 0.5 || gaussSigma > 5)
         {
             printf("Wrong Gaussian values:\nACCEPTED VALUES:\n\t 3 <= gaussLength (must be odd) <= 15\n\t 0.5 <= gaussSigma <= 5\nAborting...\n");
             return -1;
         }
         float *gaussKernel = (float *)malloc(gaussLength * gaussLength * sizeof(float));
         gaussianKernelCPU(gaussLength, gaussSigma, gaussKernel);
-        cudaMemcpy(&d_mask, gaussKernel, gaussLength * gaussLength * sizeof(float), cudaMemcpyHostToDevice);
+        #if DEBUG
+        printf("\nGaussLength: %d\nGaussSigma: %f\n", gaussLength, gaussSigma);
+        printf("\nGaussian kernel:\n");
+        for (int i = 0; i < gaussLength; i++)
+        {
+            for (int j = 0; j < gaussLength; j++)
+            {
+                printf("%f ", gaussKernel[i * gaussLength + j]);
+            }
+            printf("\n");
+        }
+        printf("\n");
+        #endif
+        maskDim = gaussLength;
+        loadKernel(gaussKernel, maskDim);
         free(gaussKernel);
     }
     break;
@@ -172,12 +186,14 @@ int main(int argc, char **argv)
     }
 
     const int outScaleDim = (img->width >= img->height) ? ((int)img->height / dimZoom) * dimZoom : ((int)img->width / dimZoom) * dimZoom;
+    const int newOutSDim = outScaleDim + maskDim - 1;
     const int pxCount = outScaleDim * outScaleDim * 3;
+    const int pxCnt = newOutSDim * newOutSDim * 3;
 
-    char *d_start, *d_scale, *d_zoom;
+    char *d_start, *d_cutout, *d_scale;
     cudaMalloc((void **)&d_start, pxCount * sizeof(char));
-    cudaMalloc((void **)&d_scale, pxCount * sizeof(char));
-    cudaMalloc((void **)&d_zoom, dimZoom * 3 * dimZoom * sizeof(char));
+    cudaMalloc((void **)&d_scale, pxCnt * sizeof(char));
+    cudaMalloc((void **)&d_cutout, dimZoom * 3 * dimZoom * sizeof(char));
     cudaMemcpy(d_start, img->data, pxCount * sizeof(char), cudaMemcpyHostToDevice);
 
     int neededThreads = dimZoom * dimZoom * 3;
@@ -198,13 +214,13 @@ int main(int argc, char **argv)
 #endif
 
     // Get the cutout of the image
-    getCutout<<<usedBlocks, usedThreads>>>(d_start, d_zoom, pointY, pointX, img->width, dimZoom, dimZoom);
+    getCutout<<<usedBlocks, usedThreads>>>(d_start, d_cutout, pointY, pointX, img->width, dimZoom, dimZoom);
     cudaDeviceSynchronize();
     destroyPPM(img);
     cudaFree(d_start);
 #if DEBUG
     RGBImage *imgCut = createPPM(dimZoom, dimZoom);
-    cudaMemcpy(imgCut->data, d_zoom, dimZoom * dimZoom * 3 * sizeof(char), cudaMemcpyDeviceToHost);
+    cudaMemcpy(imgCut->data, d_cutout, dimZoom * dimZoom * 3 * sizeof(char), cudaMemcpyDeviceToHost);
     writePPM("DEBUG_cutout.ppm", imgCut);
     destroyPPM(imgCut);
     printf("\tDone Scaling\n");
@@ -218,12 +234,12 @@ int main(int argc, char **argv)
         printf("%s\n", cudaGetErrorString(err));
         return -1;
     }
-    scaleGPU<<<usedBlocks, usedThreads>>>(d_zoom, d_scale, dimZoom, outScaleDim);
+    scaleGPU<<<usedBlocks, usedThreads>>>(d_cutout, d_scale, dimZoom, outScaleDim, newOutSDim, maskDim/2);
     cudaDeviceSynchronize();
-    cudaFree(d_zoom);
+    cudaFree(d_cutout);
 #if DEBUG
-    RGBImage *imgScale = createPPM(outScaleDim, outScaleDim);
-    cudaMemcpy(imgScale->data, d_scale, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
+    RGBImage *imgScale = createPPM(newOutSDim, newOutSDim);
+    cudaMemcpy(imgScale->data, d_scale, pxCnt * sizeof(char), cudaMemcpyDeviceToHost);
     writePPM("DEBUG_scaled.ppm", imgScale);
     destroyPPM(imgScale);
     printf("\tDone Zooming\n");
@@ -232,8 +248,23 @@ int main(int argc, char **argv)
     // Convolution
     char *d_out;
     cudaMalloc((void **)&d_out, pxCount * sizeof(char));
-    // convGPU<<<usedBlocks, usedThreads>>>(d_scale, d_out, outScaleDim * 3);
-    cudaDeviceSynchronize();
+    /*const int sharedMem = prop.sharedMemPerBlock > usedThreads ? usedThreads : prop.sharedMemPerBlock ;
+
+    if (sharedMem < maskDim)
+    {
+        printf("Error: shared memory too small for mask\n");
+        return -1;
+    }
+    //usedBlocks = (pxCnt / prop.maxThreadsPerBlock) + 1;
+    if (usedBlocks > prop.maxGridSize[0])
+    {
+        printf("%s\n", cudaGetErrorString(err));
+        return -1;
+    }*/
+    const int elementsPerTiles = ((int)sqrt(usedThreads)-(maskDim/2)*3);
+    /*usedBlocks = ((newOutSDim * newOutSDim * 3) / (elementsPerTiles))+1;*/
+    convGPU<<<usedBlocks, usedThreads>>>(d_scale, d_out, outScaleDim * 3, maskDim, newOutSDim*3, elementsPerTiles);
+    checkCudaErrors(cudaDeviceSynchronize());
 #if DEBUG
     printf("\tDone Convoluting\nEND OF GPU INSTRUCTIONS\n\n");
 #endif

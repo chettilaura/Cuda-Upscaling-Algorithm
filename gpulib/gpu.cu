@@ -5,37 +5,24 @@ __global__ void getCutout(char *img, char *cutout, int stpntY, int stpntX, int w
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
     // in the index calculus the first part shows the line, the second the column the third the color
-    if(idx < dimCutX*dimCutY*3)
-        cutout[idx] = img[(stpntY * width + stpntX)*3 + idx/(dimCutX*3) * width * 3 + idx % (dimCutX*3)];
+    if (idx < dimCutX * dimCutY * 3)
+        cutout[idx] = img[(stpntY * width + stpntX) * 3 + idx / (dimCutX * 3) * width * 3 + idx % (dimCutX * 3)];
 
     __syncthreads();
 }
 
-__global__ void scaleGPU(char *cutout, char *scaled, int dimCut, int dimScaled)
+__global__ void scaleGPU(char *cutout, char *scaled, int dimCut, int dimScaled, int dimSS, int offset)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int stuffing = dimScaled / dimCut * 3;
-
-    // In the index calculus the first part shows the line, the second the column the third the color
-    if(idx < dimScaled*dimScaled*3)   
-        scaled[idx] = cutout[idx/dimScaled/stuffing*dimCut*3 + (idx/3 % dimScaled)/stuffing*9 + idx % 3];
-    
-    __syncthreads();
-}
-
-
-__global__ void zero_order_zoomingGPU(char *img, char *zoomed, char *zoomed_out, int dimZoomX, int dimZoomY, int stpntX, int stpntY, int width, int height, int outDim, int stuffing)
-{
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= outDim * 3* outDim)
+    if (idx >= dimScaled * dimScaled * 3)
         return;
-
-    if(idx < dimZoomX*dimZoomY*3)
-        zoomed[idx] = img[(stpntY * width + stpntX)*3 + idx/(dimZoomX*3) * width * 3 + idx % (dimZoomX*3)];
+    // In the index calculus the first part shows the line, the second the column the third the color
+    const char value = cutout[idx / dimScaled / stuffing * dimCut * 3 + (idx / 3 % dimScaled) / stuffing * 9 + idx % 3];
+    const int position = offset * 3 + offset * dimSS * 3 + idx / 3 / dimScaled * dimSS * 3 + idx % 3 + idx / 3 % dimScaled * 3;
 
     __syncthreads();
-
-    zoomed_out[idx] = zoomed[ idx/outDim/stuffing*dimZoomX*3 + (idx/3 % outDim)/stuffing*9 + idx % 3 ];
+    scaled[position] = value;
 }
 
 __global__ void gaussianKernelGPU(const int gaussLength, const float gaussSigma, const char dimension, float *kernel)
@@ -54,20 +41,46 @@ __global__ void gaussianKernelGPU(const int gaussLength, const float gaussSigma,
     kernel[idx] /= sum;
 }
 
-__global__ void convGPU(const char *input, char *output, const int dim, const char *mask)
+__global__ void convGPU(const char *input, char *output, const int dim, const int dimKernel, const int dimB, const int tileDim)
 {
     const int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    const int idy = blockIdx.y * blockDim.y + threadIdx.y;
-    if (idx >= dim || idy >= dim)  
+    if (idx >= (dim * dim))
         return;
+    
+    float sum = 0;
 
-    int sum = 0;
-    for (int i = 0; i < DIMKERNEL; i++)
-    {
-        for (int j = 0; j < DIMKERNEL; j++)
-        {
-            sum += input[(idx + i) + (idy + j) * dim] * mask[i * DIMKERNEL + j];
-        }
-    }
-    output[idx + idy * dim] = sum;
+    // Compute the convolution
+    // First y offset with idx, then y offset with i, then x offset with idx, then x offset with j
+    for (int i = 0; i < dimKernel; i++)
+        for (int j = 0; j < dimKernel; j++)
+            sum += input[idx/dim*dimB + i * dimB + idx % dim + j * 3] * d_kernel[i * dimKernel + j];
+
+    /*// Alloccate shared memory
+    extern __shared__ unsigned char in_img_shared[];
+
+    // Load the input image into shared memory
+    in_img_shared[threadIdx.x] = input[idx];
+    __syncthreads();
+
+    // Compute the convolution if the thread is inside the image
+    if(threadIdx.x < tileDim*tileDim ){
+        for (int i = 0; i < dimKernel; i++)
+            for (int j = 0; j < dimKernel; j++)
+                sum += in_img_shared[threadIdx.x + i * tileDim + j*3] * d_kernel[i * dimKernel + j];
+
+        __syncthreads();
+        output[idx] = sum;
+    }  */
+
+    /*if(sum > 255)
+        sum = 255;
+    else if(sum < 0)
+        sum = 0;*/
+    __syncthreads();
+    output[idx] = sum;
+}
+
+void loadKernel(const float *kernel, const int dimKernel)
+{
+    cudaMemcpyToSymbol(d_kernel, kernel, dimKernel * dimKernel * sizeof(float));
 }

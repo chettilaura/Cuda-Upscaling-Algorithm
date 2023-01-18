@@ -3,7 +3,12 @@
 *.exe
 *.exp
 *.lib
-output.pgm
+output.ppm
+DEBUG*.ppm
+*txt
+
+# Vscode settings
+settings.json
 
 # Mac shenanigans
 # General

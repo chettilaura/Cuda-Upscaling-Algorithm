@@ -207,13 +207,13 @@ int main(int argc, char **argv)
         return -1;
     }
 #if DEBUG
-    printf("Used Threads: %d - Used Blocks: %d\n", usedThreads, usedBlocks);
-#endif
-#if DEBUG
     printf("END OF CPU INSTRUCTIONS\n\n");
 #endif
 
     // Get the cutout of the image
+#if DEBUG
+    printf("\nCutout:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads, usedBlocks);
+#endif
     getCutout<<<usedBlocks, usedThreads>>>(d_start, d_cutout, pointY, pointX, img->width, dimZoom, dimZoom);
     cudaDeviceSynchronize();
     destroyPPM(img);
@@ -234,6 +234,9 @@ int main(int argc, char **argv)
         printf("%s\n", cudaGetErrorString(err));
         return -1;
     }
+#if DEBUG
+    printf("\nZooming:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads, usedBlocks);
+#endif
     scaleGPU<<<usedBlocks, usedThreads>>>(d_cutout, d_scale, dimZoom, outScaleDim, newOutSDim, maskDim/2);
     cudaDeviceSynchronize();
     cudaFree(d_cutout);
@@ -248,7 +251,7 @@ int main(int argc, char **argv)
     // Convolution
     char *d_out;
     cudaMalloc((void **)&d_out, pxCount * sizeof(char));
-    /*const int sharedMem = prop.sharedMemPerBlock > usedThreads ? usedThreads : prop.sharedMemPerBlock ;
+    const int sharedMem = prop.sharedMemPerBlock > usedThreads ? usedThreads : prop.sharedMemPerBlock ;
 
     if (sharedMem < maskDim)
     {
@@ -260,10 +263,13 @@ int main(int argc, char **argv)
     {
         printf("%s\n", cudaGetErrorString(err));
         return -1;
-    }*/
-    const int elementsPerTiles = ((int)sqrt(usedThreads)-(maskDim/2)*3);
-    /*usedBlocks = ((newOutSDim * newOutSDim * 3) / (elementsPerTiles))+1;*/
-    convGPU<<<usedBlocks, usedThreads>>>(d_scale, d_out, outScaleDim * 3, maskDim, newOutSDim*3, elementsPerTiles);
+    }
+    const int elementsPerTile = ((int)sqrt(usedThreads)-(maskDim/2)*2);
+    usedBlocks = ((newOutSDim * newOutSDim * 3) / (elementsPerTile))+1;
+#if DEBUG
+    printf("\nConvolution:\nUsed Threads: %d - Used Blocks: %d - Shared Memory: %d - Elements per Tile: %d\n", usedThreads, usedBlocks, sharedMem, elementsPerTile);
+#endif
+    convGPU<<<usedBlocks, usedThreads, sharedMem>>>(d_scale, d_out, outScaleDim * 3, maskDim, newOutSDim*3, elementsPerTile);
     checkCudaErrors(cudaDeviceSynchronize());
 #if DEBUG
     printf("\tDone Convoluting\nEND OF GPU INSTRUCTIONS\n\n");

@@ -44,40 +44,29 @@ __global__ void gaussianKernelGPU(const int gaussLength, const float gaussSigma,
 __global__ void convGPU(const char *input, char *output, const int dim, const int dimKernel, const int dimB, const int tileDim)
 {
     const int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= (dim * dim))
+    if (idx >= (dimB * dimB))
         return;
     
-    float sum = 0;
+    int sum = 0;
+    char col = blockIdx.x % 3;
 
-    // Compute the convolution
-    // First y offset with idx, then y offset with i, then x offset with idx, then x offset with j
-    for (int i = 0; i < dimKernel; i++)
-        for (int j = 0; j < dimKernel; j++)
-            sum += input[idx/dim*dimB + i * dimB + idx % dim + j * 3] * d_kernel[i * dimKernel + j];
-
-    /*// Alloccate shared memory
+    // Alloccate shared memory
     extern __shared__ unsigned char in_img_shared[];
 
     // Load the input image into shared memory
-    in_img_shared[threadIdx.x] = input[idx];
+    in_img_shared[threadIdx.x] = input[blockIdx.x/3*blockDim.x + threadIdx.x/tileDim*dimB + threadIdx.x * 3 + col];  // Either this one
     __syncthreads();
 
     // Compute the convolution if the thread is inside the image
     if(threadIdx.x < tileDim*tileDim ){
         for (int i = 0; i < dimKernel; i++)
             for (int j = 0; j < dimKernel; j++)
-                sum += in_img_shared[threadIdx.x + i * tileDim + j*3] * d_kernel[i * dimKernel + j];
+                sum += in_img_shared[threadIdx.x + i * tileDim + j] * d_kernel[i * dimKernel + j];
 
+        if(idx == 0) printf("%d", sum);
         __syncthreads();
-        output[idx] = sum;
-    }  */
-
-    /*if(sum > 255)
-        sum = 255;
-    else if(sum < 0)
-        sum = 0;*/
-    __syncthreads();
-    output[idx] = sum;
+        output[col + blockIdx.x/3*blockDim.x + threadIdx.x/tileDim*dim + threadIdx.x * 3] = sum; // Or this one are wrong
+    }  
 }
 
 void loadKernel(const float *kernel, const int dimKernel)

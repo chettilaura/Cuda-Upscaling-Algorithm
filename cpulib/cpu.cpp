@@ -113,3 +113,13 @@ void zero_order_zoomingCPU(unsigned char *img, unsigned char *zoomed_out, int di
             }
         }*/
 }
+
+int getNumTilesPerBlock(int maxElem, const int dim){
+    while(dim % maxElem != 0){
+        maxElem--;
+        if (maxElem == 0){
+            return -1;
+        }
+    }
+    return maxElem;
+}

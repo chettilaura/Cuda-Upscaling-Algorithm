@@ -111,7 +111,7 @@ int main(int argc, char **argv)
         }
         float *gaussKernel = (float *)malloc(gaussLength * gaussLength * sizeof(float));
         gaussianKernelCPU(gaussLength, gaussSigma, gaussKernel);
-        #if DEBUG
+#if DEBUG
         printf("\nGaussLength: %d\nGaussSigma: %f\n", gaussLength, gaussSigma);
         printf("\nGaussian kernel:\n");
         for (int i = 0; i < gaussLength; i++)
@@ -123,7 +123,7 @@ int main(int argc, char **argv)
             printf("\n");
         }
         printf("\n");
-        #endif
+#endif
         maskDim = gaussLength;
         loadKernel(gaussKernel, maskDim);
         free(gaussKernel);
@@ -197,11 +197,12 @@ int main(int argc, char **argv)
     cudaMemcpy(d_start, img->data, pxCount * sizeof(char), cudaMemcpyHostToDevice);
 
     int neededThreads = dimZoom * dimZoom * 3;
-    int usedThreads = (neededThreads > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : neededThreads;
+    dim3 usedThreads = (neededThreads > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : neededThreads;
+
     // calcolo numero blocchi necessari
-    int usedBlocks = (neededThreads / prop.maxThreadsPerBlock) + 1;
+    dim3 usedBlocks = (neededThreads / prop.maxThreadsPerBlock) + 1;
     // controllo numero blocchi utilizzabili
-    if (usedBlocks > prop.maxGridSize[0])
+    if (usedBlocks.x > prop.maxGridSize[0])
     {
         printf("%s\n", cudaGetErrorString(err));
         return -1;
@@ -212,7 +213,7 @@ int main(int argc, char **argv)
 
     // Get the cutout of the image
 #if DEBUG
-    printf("\nCutout:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads, usedBlocks);
+    printf("\nCutout:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads.x, usedBlocks.x);
 #endif
     getCutout<<<usedBlocks, usedThreads>>>(d_start, d_cutout, pointY, pointX, img->width, dimZoom, dimZoom);
     cudaDeviceSynchronize();
@@ -229,15 +230,15 @@ int main(int argc, char **argv)
     // Zooming
     usedThreads = (pxCount > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : pxCount;
     usedBlocks = (pxCount / prop.maxThreadsPerBlock) + 1;
-    if (usedBlocks > prop.maxGridSize[0])
+    if (usedBlocks.x > prop.maxGridSize[0])
     {
         printf("%s\n", cudaGetErrorString(err));
         return -1;
     }
 #if DEBUG
-    printf("\nZooming:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads, usedBlocks);
+    printf("\nZooming:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads.x, usedBlocks.x);
 #endif
-    scaleGPU<<<usedBlocks, usedThreads>>>(d_cutout, d_scale, dimZoom, outScaleDim, newOutSDim, maskDim/2);
+    scaleGPU<<<usedBlocks, usedThreads>>>(d_cutout, d_scale, dimZoom, outScaleDim, newOutSDim, maskDim / 2);
     cudaDeviceSynchronize();
     cudaFree(d_cutout);
 #if DEBUG
@@ -251,30 +252,41 @@ int main(int argc, char **argv)
     // Convolution
     char *d_out;
     cudaMalloc((void **)&d_out, pxCount * sizeof(char));
-    const int sharedMem = prop.sharedMemPerBlock > usedThreads ? usedThreads : prop.sharedMemPerBlock ;
-
-    if (sharedMem < maskDim)
+    const int elementsPerTile = ((int)sqrt(usedThreads.x) - (maskDim - 1));
+    const int numTilesPerBlock = getNumTilesPerBlock(elementsPerTile, outScaleDim);
+    if (numTilesPerBlock == -1 || ((pxCount % numTilesPerBlock) != 0))
     {
-        printf("Error: shared memory too small for mask\n");
-        return -1;
-    }
-    //usedBlocks = (pxCnt / prop.maxThreadsPerBlock) + 1;
-    if (usedBlocks > prop.maxGridSize[0])
-    {
-        printf("%s\n", cudaGetErrorString(err));
-        return -1;
-    }
-    const int elementsPerTile = ((int)sqrt(usedThreads)-(maskDim/2)*2);
-    usedBlocks = ((newOutSDim * newOutSDim * 3) / (elementsPerTile))+1;
+        printf("Error: Cannot divide the image into tiles\nThe final image dimension must be a multiple of < %d for the system to use the tiling approach\nSwitching to naive solution\n", elementsPerTile);
 #if DEBUG
-    printf("\nConvolution:\nUsed Threads: %d - Used Blocks: %d - Shared Memory: %d - Elements per Tile: %d\n", usedThreads, usedBlocks, sharedMem, elementsPerTile);
+        printf("\nBasic Convolution:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads.x, usedBlocks.x);
 #endif
-    convGPU<<<usedBlocks, usedThreads, sharedMem>>>(d_scale, d_out, outScaleDim * 3, maskDim, newOutSDim*3, elementsPerTile);
+        basicConvGPU<<<usedBlocks, usedThreads>>>(d_scale, d_out, outScaleDim * 3, maskDim, newOutSDim * 3);
+    }
+    else
+    {
+        const int biggerTilesPerBlock = numTilesPerBlock + maskDim - 1;
+        usedThreads.x = biggerTilesPerBlock;
+        usedThreads.y = biggerTilesPerBlock;
+        const int res = outScaleDim / numTilesPerBlock * 3;
+        usedBlocks.x = res;
+        usedBlocks.y = res;
+        const int sharedMem = biggerTilesPerBlock * biggerTilesPerBlock * sizeof(char);
+
+        if (sharedMem > prop.sharedMemPerBlock)
+        {
+            printf("Error: shared memory too small for the operation\n");
+            return -1;
+        }
+
+#if DEBUG
+        printf("\nConvolution:\nUsed Threads: %d - Used Blocks: %d - Shared Memory: %d - Tiles per block: %d - Wider Tiles's side: %d\n", usedThreads.x*usedThreads.y, usedBlocks.x*usedBlocks.y, sharedMem, numTilesPerBlock, biggerTilesPerBlock);
+#endif
+        convGPU<<<usedBlocks, usedThreads, sharedMem>>>(d_scale, d_out, outScaleDim * 3, maskDim, newOutSDim * 3, numTilesPerBlock, biggerTilesPerBlock);
+    }
     checkCudaErrors(cudaDeviceSynchronize());
 #if DEBUG
     printf("\tDone Convoluting\nEND OF GPU INSTRUCTIONS\n\n");
 #endif
-
     RGBImage *imgOut = createPPM(outScaleDim, outScaleDim);
     cudaMemcpy(imgOut->data, d_out, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
     cudaFree(d_scale);

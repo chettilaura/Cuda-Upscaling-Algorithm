@@ -6,8 +6,9 @@ __global__ void getCutout(char *img, char *cutout, int stpntY, int stpntX, int w
 
     // in the index calculus the first part shows the line, the second the column the third the color
     if (idx < dimCutX * dimCutY * 3)
+    {
         cutout[idx] = img[(stpntY * width + stpntX) * 3 + idx / (dimCutX * 3) * width * 3 + idx % (dimCutX * 3)];
-
+    }
     __syncthreads();
 }
 
@@ -16,7 +17,9 @@ __global__ void scaleGPU(char *cutout, char *scaled, int dimCut, int dimScaled, 
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int stuffing = dimScaled / dimCut * 3;
     if (idx >= dimScaled * dimScaled * 3)
+    {
         return;
+    }
     // In the index calculus the first part shows the line, the second the column the third the color
     const char value = cutout[idx / dimScaled / stuffing * dimCut * 3 + (idx / 3 % dimScaled) / stuffing * 9 + idx % 3];
     const int position = offset * 3 + offset * dimSS * 3 + idx / 3 / dimScaled * dimSS * 3 + idx % 3 + idx / 3 % dimScaled * 3;
@@ -25,48 +28,58 @@ __global__ void scaleGPU(char *cutout, char *scaled, int dimCut, int dimScaled, 
     scaled[position] = value;
 }
 
-__global__ void gaussianKernelGPU(const int gaussLength, const float gaussSigma, const char dimension, float *kernel)
+__global__ void basicConvGPU(const char *input, char *output, const int dim, const int dimKernel, const int dimB)
 {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= dimension * dimension)
+    const int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= (dim * dim))
+    {
         return;
+    }
 
     float sum = 0;
 
-    kernel[idx] = exp(-((idx / dimension - gaussLength / 2) * (idx / dimension - gaussLength / 2) + (idx % dimension - gaussLength / 2) * (idx % dimension - gaussLength / 2)) / (2 * gaussSigma * gaussSigma));
-    sum += kernel[idx];
+    // Compute the convolution
+    for (int i = 0; i < dimKernel; i++)
+    {
+        for (int j = 0; j < dimKernel; j++)
+        {
+            sum += input[(idx / dim + i) * dim + idx % dim + j + 3] * d_kernel[i * dimKernel + j];
+        }
+    }
 
     __syncthreads();
-
-    kernel[idx] /= sum;
+    output[idx] = (unsigned char)sum;
 }
 
-__global__ void convGPU(const char *input, char *output, const int dim, const int dimKernel, const int dimB, const int tileDim)
+__global__ void convGPU(const char *input, char *output, const int dim, const int dimKernel, const int dimB, const int tileDim, const int bigTileDim)
 {
-    const int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= (dimB * dimB))
-        return;
-    
-    int sum = 0;
-    char col = blockIdx.x % 3;
-
     // Alloccate shared memory
     extern __shared__ unsigned char in_img_shared[];
 
+    int ty = threadIdx.y; // t_row
+    int tx = threadIdx.x; // t_col
+    int row_o = blockIdx.y * tileDim + ty;
+    int col_o = blockIdx.x * tileDim + tx;
+    int row_i = row_o - dimKernel / 2;
+    int col_i = col_o - dimKernel / 2;
+
     // Load the input image into shared memory
-    in_img_shared[threadIdx.x] = input[blockIdx.x/3*blockDim.x + threadIdx.x/tileDim*dimB + threadIdx.x * 3 + col];  // Either this one
+    in_img_shared[tx + ty * bigTileDim] = input[row_i * dimB + col_i];
     __syncthreads();
-
-    // Compute the convolution if the thread is inside the image
-    if(threadIdx.x < tileDim*tileDim ){
-        for (int i = 0; i < dimKernel; i++)
-            for (int j = 0; j < dimKernel; j++)
-                sum += in_img_shared[threadIdx.x + i * tileDim + j] * d_kernel[i * dimKernel + j];
-
-        if(idx == 0) printf("%d", sum);
-        __syncthreads();
-        output[col + blockIdx.x/3*blockDim.x + threadIdx.x/tileDim*dim + threadIdx.x * 3] = sum; // Or this one are wrong
-    }  
+    float sum = 0;
+    if (ty < tileDim && tx < tileDim)
+    {
+        for (int m_row = 0; m_row < dimKernel; m_row++)
+            for (int m_col = 0; m_col < dimKernel; m_col++)
+                sum += in_img_shared[(ty + m_row) * bigTileDim + tx + m_col] * d_kernel[m_row * dimKernel + m_col];
+        
+        if (sum < 0)
+            sum = 0;
+        if (sum > 256)
+            sum = 255;
+        if (row_o < dimB && col_o < dimB)
+            output[row_o * dimB + col_o] = sum;
+    }
 }
 
 void loadKernel(const float *kernel, const int dimKernel)

@@ -5,7 +5,6 @@
 *.lib
 output.ppm
 DEBUG*.ppm
-*txt
 
 # Vscode settings
 settings.json

@@ -254,7 +254,7 @@ int main(int argc, char **argv)
     cudaMalloc((void **)&d_out, pxCount * sizeof(char));
     const int elementsPerTile = ((int)sqrt(usedThreads.x) - (maskDim - 1));
     const int numTilesPerBlock = getNumTilesPerBlock(elementsPerTile, outScaleDim);
-    if (numTilesPerBlock == -1 || ((pxCount % numTilesPerBlock) != 0))
+    if (numTilesPerBlock == 0 || ((pxCount % numTilesPerBlock) != 0))
     {
         printf("Error: Cannot divide the image into tiles\nThe final image dimension must be a multiple of < %d for the system to use the tiling approach\nSwitching to naive solution\n", elementsPerTile);
 #if DEBUG

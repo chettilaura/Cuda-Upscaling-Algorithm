@@ -57,15 +57,18 @@ __global__ void convGPU(const char *input, char *output, const int dim, const in
     extern __shared__ unsigned char in_img_shared[];
 
     int ty = threadIdx.y; // t_row
-    int tx = threadIdx.x; // t_col
     int row_o = blockIdx.y * tileDim + ty;
-    int col_o = blockIdx.x * tileDim + tx;
     int row_i = row_o - dimKernel / 2;
+    
+    int tx = threadIdx.x; // t_col
+    int color = blockIdx.x % 3;
+    int col_o = blockIdx.x / 3 * (tileDim*3) + tx * 3 + color;
     int col_i = col_o - dimKernel / 2;
 
     // Load the input image into shared memory
-    in_img_shared[tx + ty * bigTileDim] = input[row_i * dimB + col_i];
+    in_img_shared[tx + ty * bigTileDim] = input[row_o * dimB + col_o];
     __syncthreads();
+
     float sum = 0;
     if (ty < tileDim && tx < tileDim)
     {
@@ -77,8 +80,7 @@ __global__ void convGPU(const char *input, char *output, const int dim, const in
             sum = 0;
         if (sum > 256)
             sum = 255;
-        if (row_o < dimB && col_o < dimB)
-            output[row_o * dimB + col_o] = sum;
+        if (row_o < dimB && col_o < dimB)output[row_o * dim + col_o] = sum;
     }
 }
 

@@ -1,4 +1,5 @@
 #include "gpu.cuh"
+#include <cmath>
 
 __global__ void getCutout(char *img, char *cutout, int stpntY, int stpntX, int width, int dimCutX, int dimCutY)
 {

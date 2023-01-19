@@ -1,0 +1,219 @@
+==7630== NVPROF is profiling process 7630, command: ./upsCu sample640x426.ppm 200 120 100 0 15 1
+==7630== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+==7630== Profiling application: ./upsCu sample640x426.ppm 200 120 100 0 15 1
+==7630== Profiling result:
+==7630== Event result:
+"Device","Kernel","Invocations","Event Name","Min","Max","Avg","Total"
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"tex0_cache_sector_queries",4473,4473,4473,4473
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"tex1_cache_sector_queries",4477,4477,4477,4477
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"tex0_cache_sector_misses",2840,2840,2840,2840
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"tex1_cache_sector_misses",2835,2835,2835,2835
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp0_write_sector_misses",669,669,669,669
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp1_write_sector_misses",692,692,692,692
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp0_read_sector_misses",644,644,644,644
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp1_read_sector_misses",644,644,644,644
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp0_read_tex_sector_queries",978,978,978,978
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp1_read_tex_sector_queries",947,947,947,947
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp0_write_tex_sector_queries",464,464,464,464
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp1_write_tex_sector_queries",474,474,474,474
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp0_read_tex_hit_sectors",646,646,646,646
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp1_read_tex_hit_sectors",627,627,627,627
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp0_write_tex_hit_sectors",464,464,464,464
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp1_write_tex_hit_sectors",474,474,474,474
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp0_total_read_sector_queries",1113,1113,1113,1113
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp1_total_read_sector_queries",956,956,956,956
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp0_total_write_sector_queries",473,473,473,473
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp1_total_write_sector_queries",486,486,486,486
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp0_read_sysmem_sector_queries",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp1_read_sysmem_sector_queries",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp0_write_sysmem_sector_queries",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"l2_subp1_write_sysmem_sector_queries",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"elapsed_cycles_sm",25969,25969,25969,25969
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"gld_inst_8bit",30000,30000,30000,30000
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"gld_inst_16bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"gld_inst_32bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"gld_inst_64bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"gld_inst_128bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"gst_inst_8bit",30000,30000,30000,30000
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"gst_inst_16bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"gst_inst_32bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"gst_inst_64bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"gst_inst_128bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"prof_trigger_00",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"prof_trigger_01",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"prof_trigger_02",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"prof_trigger_03",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"prof_trigger_04",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"prof_trigger_05",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"prof_trigger_06",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"prof_trigger_07",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"warps_launched",960,960,960,960
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"inst_issued0",25942,25942,25942,25942
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"inst_issued1",65116,65116,65116,65116
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"inst_issued2",3882,3882,3882,3882
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"inst_executed",72688,72688,72688,72688
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"thread_inst_executed",2325120,2325120,2325120,2325120
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"not_predicated_off_thread_inst_executed",2145318,2145318,2145318,2145318
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"local_store",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"local_load",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"shared_load",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"shared_store",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"shared_atom_cas",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"shared_atom",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"global_atom_cas",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"atom_count",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"gred_count",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"global_load",938,938,938,938
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"global_store",938,938,938,938
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"divergent_branch",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"branch",2858,2858,2858,2858
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"active_cycles",24429,24429,24429,24429
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"active_warps",1401800,1401800,1401800,1401800
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"active_ctas",45652,45652,45652,45652
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"sm_cta_launched",30,30,30,30
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"shared_ld_bank_conflict",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"shared_st_bank_conflict",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"shared_ld_transactions",0,0,0,0
+"NVIDIA Tegra X1 (0)","getCutout(char*, char*, int, int, int, int, int)",1,"shared_st_transactions",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"tex0_cache_sector_queries",913534,913534,913534,913534
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"tex1_cache_sector_queries",913541,913541,913541,913541
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"tex0_cache_sector_misses",559164,559164,559164,559164
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"tex1_cache_sector_misses",559161,559161,559161,559161
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp0_write_sector_misses",22867,22867,22867,22867
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp1_write_sector_misses",22861,22861,22861,22861
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp0_read_sector_misses",171853,171853,171853,171853
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp1_read_sector_misses",171853,171853,171853,171853
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp0_read_tex_sector_queries",349650,349650,349650,349650
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp1_read_tex_sector_queries",348675,348675,348675,348675
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp0_write_tex_sector_queries",112370,112370,112370,112370
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp1_write_tex_sector_queries",113745,113745,113745,113745
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp0_read_tex_hit_sectors",334929,334929,334929,334929
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp1_read_tex_hit_sectors",333992,333992,333992,333992
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp0_write_tex_hit_sectors",112370,112370,112370,112370
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp1_write_tex_hit_sectors",113745,113745,113745,113745
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp0_total_read_sector_queries",497869,497869,497869,497869
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp1_total_read_sector_queries",348696,348696,348696,348696
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp0_total_write_sector_queries",112380,112380,112380,112380
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp1_total_write_sector_queries",113758,113758,113758,113758
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp0_read_sysmem_sector_queries",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp1_read_sysmem_sector_queries",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp0_write_sysmem_sector_queries",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"l2_subp1_write_sysmem_sector_queries",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"elapsed_cycles_sm",49588079,49588079,49588079,49588079
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"gld_inst_8bit",5062500,5062500,5062500,5062500
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"gld_inst_16bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"gld_inst_32bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"gld_inst_64bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"gld_inst_128bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"gst_inst_8bit",1440000,1440000,1440000,1440000
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"gst_inst_16bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"gst_inst_32bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"gst_inst_64bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"gst_inst_128bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"prof_trigger_00",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"prof_trigger_01",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"prof_trigger_02",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"prof_trigger_03",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"prof_trigger_04",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"prof_trigger_05",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"prof_trigger_06",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"prof_trigger_07",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"warps_launched",163125,163125,163125,163125
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"inst_issued0",70495345,70495345,70495345,70495345
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"inst_issued1",103069161,103069161,103069161,103069161
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"inst_issued2",24699459,24699459,24699459,24699459
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"inst_executed",152465625,152465625,152465625,152465625
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"thread_inst_executed",2704612500,2704612500,2704612500,2704612500
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"not_predicated_off_thread_inst_executed",2569252500,2569252500,2569252500,2569252500
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"local_store",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"local_load",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"shared_load",18984375,18984375,18984375,18984375
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"shared_store",163125,163125,163125,163125
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"shared_atom_cas",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"shared_atom",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"global_atom_cas",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"atom_count",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"gred_count",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"global_load",163125,163125,163125,163125
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"global_store",84375,84375,84375,84375
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"divergent_branch",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"branch",14338125,14338125,14338125,14338125
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"active_cycles",49586529,49586529,49586529,49586529
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"active_warps",1483408444,1483408444,1483408444,1483408444
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"active_ctas",98702812,98702812,98702812,98702812
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"sm_cta_launched",5625,5625,5625,5625
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"shared_ld_bank_conflict",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"shared_st_bank_conflict",0,0,0,0
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"shared_ld_transactions",18984375,18984375,18984375,18984375
+"NVIDIA Tegra X1 (0)","convGPU(char const *, char*, int, int, int, int, int)",1,"shared_st_transactions",163125,163125,163125,163125
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"tex0_cache_sector_queries",74917,74917,74917,74917
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"tex1_cache_sector_queries",74883,74883,74883,74883
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"tex0_cache_sector_misses",50915,50915,50915,50915
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"tex1_cache_sector_misses",50885,50885,50885,50885
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp0_write_sector_misses",7182,7182,7182,7182
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp1_write_sector_misses",7244,7244,7244,7244
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp0_read_sector_misses",4518,4518,4518,4518
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp1_read_sector_misses",4518,4518,4518,4518
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp0_read_tex_sector_queries",9554,9554,9554,9554
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp1_read_tex_sector_queries",9746,9746,9746,9746
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp0_write_tex_sector_queries",15110,15110,15110,15110
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp1_write_tex_sector_queries",15090,15090,15090,15090
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp0_read_tex_hit_sectors",9305,9305,9305,9305
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp1_read_tex_hit_sectors",9490,9490,9490,9490
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp0_write_tex_hit_sectors",15110,15110,15110,15110
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp1_write_tex_hit_sectors",15090,15090,15090,15090
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp0_total_read_sector_queries",13921,13921,13921,13921
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp1_total_read_sector_queries",9756,9756,9756,9756
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp0_total_write_sector_queries",15119,15119,15119,15119
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp1_total_write_sector_queries",15103,15103,15103,15103
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp0_read_sysmem_sector_queries",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp1_read_sysmem_sector_queries",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp0_write_sysmem_sector_queries",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"l2_subp1_write_sysmem_sector_queries",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"elapsed_cycles_sm",741172,741172,741172,741172
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"gld_inst_8bit",480000,480000,480000,480000
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"gld_inst_16bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"gld_inst_32bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"gld_inst_64bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"gld_inst_128bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"gst_inst_8bit",480000,480000,480000,480000
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"gst_inst_16bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"gst_inst_32bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"gst_inst_64bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"gst_inst_128bit",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"prof_trigger_00",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"prof_trigger_01",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"prof_trigger_02",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"prof_trigger_03",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"prof_trigger_04",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"prof_trigger_05",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"prof_trigger_06",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"prof_trigger_07",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"warps_launched",15008,15008,15008,15008
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"inst_issued0",149023,149023,149023,149023
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"inst_issued1",2580179,2580179,2580179,2580179
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"inst_issued2",225082,225082,225082,225082
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"inst_executed",3030120,3030120,3030120,3030120
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"thread_inst_executed",96963840,96963840,96963840,96963840
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"not_predicated_off_thread_inst_executed",87525836,87525836,87525836,87525836
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"local_store",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"local_load",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"shared_load",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"shared_store",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"shared_atom_cas",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"shared_atom",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"global_atom_cas",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"atom_count",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"gred_count",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"global_load",15000,15000,15000,15000
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"global_store",15000,15000,15000,15000
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"divergent_branch",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"branch",30008,30008,30008,30008
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"active_cycles",739563,739563,739563,739563
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"active_warps",43703320,43703320,43703320,43703320
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"active_ctas",1442905,1442905,1442905,1442905
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"sm_cta_launched",469,469,469,469
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"shared_ld_bank_conflict",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"shared_st_bank_conflict",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"shared_ld_transactions",0,0,0,0
+"NVIDIA Tegra X1 (0)","scaleGPU(char*, char*, int, int, int, int)",1,"shared_st_transactions",0,0,0,0

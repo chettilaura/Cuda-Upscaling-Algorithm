@@ -1,4 +1,5 @@
 #include "cpu.h"
+#include <cmath>
 
 void convCPU(char *input, char *output, char *kernel, const int width, const int heigth)
 {

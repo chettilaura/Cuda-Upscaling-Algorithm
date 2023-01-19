@@ -283,7 +283,7 @@ int main(int argc, char **argv)
 #endif
         convGPU<<<usedBlocks, usedThreads, sharedMem>>>(d_scale, d_out, outScaleDim * 3, maskDim, newOutSDim * 3, numTilesPerBlock, biggerTilesPerBlock);
     }
-    checkCudaErrors(cudaDeviceSynchronize());
+    cudaDeviceSynchronize();
 #if DEBUG
     printf("\tDone Convoluting\nEND OF GPU INSTRUCTIONS\n\n");
 #endif

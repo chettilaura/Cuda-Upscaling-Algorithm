@@ -6,8 +6,66 @@
 #define N 9
 #define DEBUG 1
 
+bool replace(std::string &str, char c, char r)
+{
+    bool found = false;
+    int len = str.length();
+    for (int i = 0; i < len; i++)
+    {
+        printf("%c\n", str[i]);
+        if (str[i] == c)
+        {
+            str[i] = r;
+            printf("std::string: %s\n", str.c_str());
+            found = true;
+        }
+    }
+    return found;
+}
+
 int main(int argc, char **argv)
 {
+    // Go to help
+    if (argc == 1 || (argc == 2 && (argv[1] == std::string("-h") || argv[1] == std::string("--help"))))
+    {
+        printf(
+            "CUDA Upscale\n\n"
+            "WARNING: This program is made only for educational purposes and is not intended to be used in production.\n\n"
+            "Usage:\n\n"
+            "    %s [Filtering Matrix generation's commands] inputFile.ppm cutOutCenterX cutOutCenterY cutOutWidth cutOutHeight zoomLevel [Matrix generation's parameters]\n\n"
+            "  - Filtering Matrix generation's commands\n"
+            "\t -c[v] --custom[v]: Generate a custom matrix from the file passed as an argument in the Matrix generation's parameters\n"
+            "\t -g[v] --gauss[v]: Generate a gaussian matrix\n"
+            "\t Optional: v character to allow verbose mode and print debug information\n\n"
+            "  - inputFile.ppm: A valid .ppm P6 input image\n"
+            "  - cutOutCenterX: X coordinate of the center of the selection zone\n"
+            "  - cutOutCenterY: Y coordinate of the center of the selection zone\n"
+            "  - cutOutWidth: Length of the side of the selection\n\n"
+            "  - cutOutHeight: Length of the side of the selection\n\n"
+            "  - zoomLevel: Zoom level of the output image, must be a INT value from 1 to 32\n"
+            "               If 1 is inserted, only the convolution will be performed\n\n"
+            "  - Matrix generation's parameters\n"
+            "\t GaussLength: must be an odd value from 3 to 15 sides included\n"
+            "\t GaussSigma: must be a value from 0.5 to 5 sides included\n"
+            "\t InputKernelFile.txt: formatted as such\n\n"
+            "\t\t\tmatrixSide'sLength (must be odd)\n"
+            "\t\t\tFirstElement SecondElement ...\n"
+            "\t\t\tRowElement ...\n"
+            "\t\t\t...\n",
+            argv[0]);
+    }
+
+    if (argc < 9 || argc > 10)
+    {
+        printf("Wrong command line input. Use -h or --help for more information\n");
+        return -1;
+    }
+
+    // Check if verbose mode is enabled
+    std::string arg1 = argv[1];
+    bool verbose = arg1.find('v') != std::string::npos;//= replace(arg1, 'v', '\0');
+    //printf("Verbose mode: %s\n\targ1: %s\n", verbose ? "enabled" : "disabled", arg1.c_str());
+
     // Check GPU
     int nDevices;
     cudaError_t err = cudaGetDeviceCount(&nDevices);
@@ -21,46 +79,27 @@ int main(int argc, char **argv)
         printf("No CUDA device found\n");
         return -1;
     }
-#if DEBUG
-    printf("Number of CUDA devices: %d\n", nDevices);
-#endif
+
+    if (verbose)
+        printf("Number of CUDA devices: %d\n", nDevices);
 
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, 0);
 
-    // Mask variables
+    // Mask length
     char maskDim = 0;
 
-    // Filter Setup
-    switch (argc)
-    {
-    // Help
-    case 2:
-        if (argv[1] == std::string("-h") || argv[1] == std::string("--help"))
-        {
-            printf("Usage: %s inputFile.ppm DimX DimY dimZoom mode (GaussLength GaussSigma) OR InputKernelFile.txt\n\nWhere:\n\tDimX: X coordinate of the center of the selection zone\n\tDimY: Y coordinate of the center of the selection zone\n\tdimZoom: Length of the side of the selection mask which has a square shape\n\tmode: 0 for Gaussian filter, 1  for custom kernel loaded from file\n\n\tGaussLength: must be an odd value from 3 to 15 sides include\n\tGaussSigma: must be a value from 0.5 to 5 sides included\n\n\tInputKernelFile.txt: formatted as such\n\n\t\t\tmatrixSide'sLength\n\t\t\tFirstElement SecondElement ...\n\t\t\tRowElement ...\n\t\t\t...\n", argv[0]);
-            return 0;
-        }
-        else
-        {
-            printf("Wrong command line input. Use -h or --help for more information\n");
-            return -1;
-        }
-        break;
+    // Check mode and load kernel
+    if (verbose)
+        printf("Loading kernel...\n");
 
     // Custom Kernel from file
-    case 7:
+    if (argc == 9 && ((arg1.rfind("-c", 0) == 0) || (arg1.rfind("--custom", 0) == 0)))
     {
-        int mode = (int)strtol(argv[5], NULL, 10);
-        if (mode != 1)
-        {
-            printf("Wrong command line input. Do not input gaussian data for non-gaussian matrices. Use -h or --help for more information\n");
-            return -1;
-        }
-        FILE *kernelFile = fopen(argv[6], "r");
+        FILE *kernelFile = fopen(argv[8], "r");
         if (kernelFile == NULL)
         {
-            printf("Error opening file %s\n", argv[6]);
+            printf("Error opening file %s\n", argv[8]);
             return -1;
         }
 
@@ -83,7 +122,8 @@ int main(int argc, char **argv)
             {
                 printf("Wrong input. Use -h or --help for more information\n");
                 return -1;
-            }
+            } else if (verbose)
+                printf("%f %f %f %f %f %f %f %f %f \n", kernel[i * maskDim], kernel[i * maskDim + 1], kernel[i * maskDim + 2], kernel[i * maskDim + 3], kernel[i * maskDim + 4], kernel[i * maskDim + 5], kernel[i * maskDim + 6], kernel[i * maskDim + 7], kernel[i * maskDim + 8]);
         }
         fclose(kernelFile);
 
@@ -91,19 +131,11 @@ int main(int argc, char **argv)
         loadKernel(kernel, maskDim);
         free(kernel);
     }
-    break;
-
-    // Gaussian
-    case 8:
+    // Gaussian kernel
+    else if (argc == 10 && ((arg1.rfind("-g", 0) == 0) || (arg1.rfind("--gauss", 0) == 0)))
     {
-        int mode = (int)strtol(argv[5], NULL, 10);
-        if (mode != 0)
-        {
-            printf("Wrong command line input. Do not input gaussian data for non-gaussian matrices. Use -h or --help for more information\n");
-            return -1;
-        }
-        int gaussLength = (int)strtol(argv[6], NULL, 10);
-        float gaussSigma = (float)strtof(argv[7], NULL);
+        int gaussLength = (int)strtol(argv[8], NULL, 10);
+        float gaussSigma = (float)strtof(argv[9], NULL);
         if (gaussLength < 3 || gaussLength > 15 || gaussLength % 2 == 0 || gaussSigma < 0.5 || gaussSigma > 5)
         {
             printf("Wrong Gaussian values:\nACCEPTED VALUES:\n\t 3 <= gaussLength (must be odd) <= 15\n\t 0.5 <= gaussSigma <= 5\nAborting...\n");
@@ -111,117 +143,143 @@ int main(int argc, char **argv)
         }
         float *gaussKernel = (float *)malloc(gaussLength * gaussLength * sizeof(float));
         gaussianKernelCPU(gaussLength, gaussSigma, gaussKernel);
-#if DEBUG
-        printf("\nGaussLength: %d\nGaussSigma: %f\n", gaussLength, gaussSigma);
-        printf("\nGaussian kernel:\n");
-        for (int i = 0; i < gaussLength; i++)
+        if (verbose)
         {
-            for (int j = 0; j < gaussLength; j++)
+            printf("\nGaussLength: %d\nGaussSigma: %f\n", gaussLength, gaussSigma);
+            printf("\nGaussian kernel:\n");
+            for (int i = 0; i < gaussLength; i++)
             {
-                printf("%f ", gaussKernel[i * gaussLength + j]);
+                for (int j = 0; j < gaussLength; j++)
+                {
+                    printf("%f ", gaussKernel[i * gaussLength + j]);
+                }
+                printf("\n");
             }
             printf("\n");
         }
-        printf("\n");
-#endif
         maskDim = gaussLength;
         loadKernel(gaussKernel, maskDim);
         free(gaussKernel);
     }
-    break;
-
-    default:
+    // Display Error
+    else
+    {
         printf("Wrong command line input. Use -h or --help for more information\n");
+        printf("arg1: %d, argc: %d\n", arg1[2] == 'v', argc);
         return -1;
     }
+    if (verbose)
+        printf("Kernel loaded\n"
+               "Mask dimension: %d\n"
+               "Proceeding with checks for scaling...\n", maskDim);
+
 
     // fine switch case
-    const int dimX = (int)strtol(argv[2], NULL, 10);    // X coordinate of the center of the selection zone
-    const int dimY = (int)strtol(argv[3], NULL, 10);    // Y coordinate of the center of the selection zone
-    const int dimZoom = (int)strtol(argv[4], NULL, 10); // Length of the side of the selection mask which has a square shape
+    const int cutOutCenterX = (int)strtol(argv[3], NULL, 10);    // X coordinate of the center of the selection zone
+    const int cutOutCenterY = (int)strtol(argv[4], NULL, 10);    // Y coordinate of the center of the selection zone
+    const int cutOutWidth = (int)strtol(argv[5], NULL, 10);      // Length of the side of the selection mask
+    const int cutOutHeight = (int)strtol(argv[6], NULL, 10);     // Length of the side of the selection mask 
+    const int zoomLevel = (int)strtol(argv[7], NULL, 10);
 
-    // check dimZoom is even
-    if (dimZoom % 2 != 0)
+    // check cutOutWidth is even
+    if (cutOutWidth % 2 != 0)
     {
-        printf("Error: dimZoom must be even\n");
+        printf("Error: cutOutWidth must be even\n");
         return -1;
     }
 
-#if DEBUG
-    printf("DimX: %d, DimY: %d, dimZoom: %d\n", dimX, dimY, dimZoom);
-#endif
+    // check cutOutHeight is even
+    if (cutOutHeight % 2 != 0)
+    {
+        printf("Error: cutOutHeight must be even\n");
+        return -1;
+    }
+    
+    if(zoomLevel < 1 || zoomLevel > 32)
+    {
+        printf("Error: zoomLevel must be between 1 and 32\n");
+        return -1;
+    }
+
+    if (verbose) printf("cutOutCenterX: %d, cutOutCenterY: %d, cutOutWidth: %d, cutOutHeight: %d, zoomLevel: %d\n", cutOutCenterX, cutOutCenterY, cutOutWidth, cutOutHeight, zoomLevel);
 
     // Check input file ends with .ppm
-    if (std::string(argv[1]).size() < 4 || std::string(argv[1]).substr(std::string(argv[1]).size() - 4) != ".ppm")
+    if (std::string(argv[2]).size() < 4 || std::string(argv[2]).substr(std::string(argv[2]).size() - 4) != ".ppm")
     {
         printf("Error: input file must be a .ppm file\n");
         return -1;
     }
-    RGBImage *img = readPPM(argv[1]);
+    RGBImage *img = readPPM(argv[2]);
 
     // Y boundaries check and mask check
-    const int pointY = dimY - dimZoom / 2;
-    if (dimY > img->height || dimY < 0)
+    const int pointY = cutOutCenterY - cutOutHeight / 2;
+    if (cutOutCenterY > img->height || cutOutCenterY < 0)
     {
-        printf("Error: dimY outside image boundaries");
+        printf("Error: cutOutCenterY outside image boundaries");
         return -1;
     }
-    if ((dimY + dimZoom / 2) > img->height - 1 || pointY < 1)
+    if ((cutOutCenterY + cutOutHeight / 2) > img->height - 1 || pointY < 1)
     {
         printf("Error: Y mask outside image boundaries");
         return -1;
     }
 
     // X boundaries check and mask check
-    const int pointX = dimX - dimZoom / 2;
-    if (dimX > img->width || dimX < 0)
+    const int pointX = cutOutCenterX - cutOutWidth / 2;
+    if (cutOutCenterX > img->width || cutOutCenterX < 0)
     {
-        printf("Error: dimX outside image boundaries");
+        printf("Error: cutOutCenterX outside image boundaries");
         return -1;
     }
-    if ((dimX + dimZoom / 2) > img->width - 1 || pointX < 1)
+    if ((cutOutCenterX + cutOutWidth / 2) > img->width - 1 || pointX < 1)
     {
         printf("Error: X mask outside image boundaries");
         return -1;
     }
 
-    const int outScaleDim = (img->width >= img->height) ? ((int)img->height / dimZoom) * dimZoom : ((int)img->width / dimZoom) * dimZoom;
-    const int newOutSDim = outScaleDim + maskDim - 1;
-    const int pxCount = outScaleDim * outScaleDim * 3;
-    const int pxCnt = newOutSDim * newOutSDim * 3;
+    const int outWidthDim = cutOutWidth * zoomLevel;
+    const int outHeightDim = cutOutHeight * zoomLevel;
+    const int scaleWidthDim = outWidthDim + maskDim - 1;
+    const int scaleHeightDim = outHeightDim + maskDim - 1;
+    const int outPx = outWidthDim * outHeightDim * 3;
+    const int scalePx = scaleWidthDim * scaleHeightDim * 3;
 
     char *d_start, *d_cutout, *d_scale;
-    cudaMalloc((void **)&d_start, pxCount * sizeof(char));
-    cudaMalloc((void **)&d_scale, pxCnt * sizeof(char));
-    cudaMalloc((void **)&d_cutout, dimZoom * 3 * dimZoom * sizeof(char));
-    cudaMemcpy(d_start, img->data, pxCount * sizeof(char), cudaMemcpyHostToDevice);
+    cudaMalloc((void **)&d_start, img->height * img->width * 3 * sizeof(char));
+    cudaMalloc((void **)&d_scale, scalePx * sizeof(char));
+    cudaMemcpy(d_start, img->data, img->height * img->width * 3 * sizeof(char), cudaMemcpyHostToDevice);
 
-    int neededThreads = dimZoom * dimZoom * 3;
-    dim3 usedThreads = (neededThreads > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : neededThreads;
+    //int neededThreads = 32 / zoomLevel; // numero di thread necessari per ogni byte di output
+    dim3 usedThreads = (outPx > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : outPx;
 
     // calcolo numero blocchi necessari
-    dim3 usedBlocks = (neededThreads / prop.maxThreadsPerBlock) + 1;
+    dim3 usedBlocks = (outPx / prop.maxThreadsPerBlock) + 1;
     // controllo numero blocchi utilizzabili
     if (usedBlocks.x > prop.maxGridSize[0])
     {
         printf("%s\n", cudaGetErrorString(err));
         return -1;
     }
-#if DEBUG
-    printf("END OF CPU INSTRUCTIONS\n\n");
-#endif
 
-    // Get the cutout of the image
+    // Scale image from d_start to d_scale
+    if (verbose)
+        printf("Scaling image...\n"
+                "Used Threads: %d - Used Blocks: %d\n",
+                usedThreads.x, usedBlocks.x);
+
+    scaleImage<<<usedBlocks, usedThreads>>>(d_start, d_scale, img->width * 3, cutOutWidth * 3, outWidthDim *3, scaleWidthDim * 3, (pointY * scaleWidthDim + pointX) * 3, (scaleWidthDim + 1) * 3 * (maskDim / 2), zoomLevel, outPx);
+
+    /*
 #if DEBUG
     printf("\nCutout:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads.x, usedBlocks.x);
 #endif
-    getCutout<<<usedBlocks, usedThreads>>>(d_start, d_cutout, pointY, pointX, img->width, dimZoom, dimZoom);
+    getCutout<<<usedBlocks, usedThreads>>>(d_start, d_cutout, pointY, pointX, img->width, cutOutLength, cutOutLength);
     cudaDeviceSynchronize();
     destroyPPM(img);
     cudaFree(d_start);
 #if DEBUG
-    RGBImage *imgCut = createPPM(dimZoom, dimZoom);
-    cudaMemcpy(imgCut->data, d_cutout, dimZoom * dimZoom * 3 * sizeof(char), cudaMemcpyDeviceToHost);
+    RGBImage *imgCut = createPPM(cutOutLength, cutOutLength);
+    cudaMemcpy(imgCut->data, d_cutout, cutOutLength * cutOutLength * 3 * sizeof(char), cudaMemcpyDeviceToHost);
     writePPM("DEBUG_cutout.ppm", imgCut);
     destroyPPM(imgCut);
     printf("\tDone Scaling\n");
@@ -238,19 +296,21 @@ int main(int argc, char **argv)
 #if DEBUG
     printf("\nZooming:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads.x, usedBlocks.x);
 #endif
-    scaleGPU<<<usedBlocks, usedThreads>>>(d_cutout, d_scale, dimZoom, outScaleDim, newOutSDim, maskDim / 2);
+    scaleGPU<<<usedBlocks, usedThreads>>>(d_cutout, d_scale, cutOutLength, outScaleDim, newOutSDim, maskDim / 2);
+    */
     cudaDeviceSynchronize();
-    cudaFree(d_cutout);
+    //cudaFree(d_cutout);
+    /*
 #if DEBUG
     RGBImage *imgScale = createPPM(newOutSDim, newOutSDim);
     cudaMemcpy(imgScale->data, d_scale, pxCnt * sizeof(char), cudaMemcpyDeviceToHost);
     writePPM("DEBUG_scaled.ppm", imgScale);
     destroyPPM(imgScale);
     printf("\tDone Zooming\n");
-#endif
+#endif*/
 
-    // Convolution
-    char *d_out;
+    // Convolution 
+    /*char *d_out;
     cudaMalloc((void **)&d_out, pxCount * sizeof(char));
     const int elementsPerTile = ((int)sqrt(usedThreads.x) - (maskDim - 1));
     const int numTilesPerBlock = getNumTilesPerBlock(elementsPerTile, outScaleDim);
@@ -260,7 +320,7 @@ int main(int argc, char **argv)
 #if DEBUG
         printf("\nBasic Convolution:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads.x, usedBlocks.x);
 #endif
-        basicConvGPU<<<usedBlocks, usedThreads>>>(d_scale, d_out, newOutSDim * 3,  outScaleDim * 3, maskDim);
+        basicConvGPU<<<usedBlocks, usedThreads>>>(d_scale, d_out, newOutSDim * 3, outScaleDim * 3, maskDim);
     }
     else
     {
@@ -279,7 +339,7 @@ int main(int argc, char **argv)
         }
 
 #if DEBUG
-        printf("\nConvolution:\nUsed Threads: %d - Used Blocks: %d - Shared Memory: %d - Tiles per block: %d - Wider Tiles's side: %d\n", usedThreads.x*usedThreads.y, usedBlocks.x*usedBlocks.y, sharedMem, numTilesPerBlock, biggerTilesPerBlock);
+        printf("\nConvolution:\nUsed Threads: %d - Used Blocks: %d - Shared Memory: %d - Tiles per block: %d - Wider Tiles's side: %d\n", usedThreads.x * usedThreads.y, usedBlocks.x * usedBlocks.y, sharedMem, numTilesPerBlock, biggerTilesPerBlock);
 #endif
         convGPU<<<usedBlocks, usedThreads, sharedMem>>>(d_scale, d_out, newOutSDim * 3, outScaleDim * 3, maskDim, biggerTilesPerBlock, numTilesPerBlock);
     }
@@ -290,14 +350,20 @@ int main(int argc, char **argv)
     RGBImage *imgOut = createPPM(outScaleDim, outScaleDim);
     cudaMemcpy(imgOut->data, d_out, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
     cudaFree(d_scale);
-    cudaFree(d_out);
+    cudaFree(d_out);*/
 
     // Print output
-    writePPM("output.ppm", imgOut);
-    destroyPPM(imgOut);
+    //writePPM("output.ppm", imgOut);
+    //destroyPPM(imgOut);
+    RGBImage *scaled = createPPM(scaleWidthDim, scaleHeightDim);
+    cudaMemcpy(scaled->data, d_scale, scaleWidthDim * scaleHeightDim * 3 * sizeof(char), cudaMemcpyDeviceToHost);
+    cudaFree(d_scale);
 
-#if DEBUG
+    writePPM("VERB_scaled.ppm", scaled);
+    destroyPPM(scaled);
+
+if (verbose)
     printf("END OF THE PROGRAM\n\n");
-#endif
+
     return 0;
 }

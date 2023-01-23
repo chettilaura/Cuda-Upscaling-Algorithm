@@ -13,6 +13,21 @@ __global__ void getCutout(char *img, char *cutout, int stpntY, int stpntX, int w
     __syncthreads();
 }
 
+__global__ void scaleImage(const char *input, char *output, const int dimImgIn, const int dimImgMid, const int dimImgW, const int dimImgOut, const int offsetCut, const int offsetScaled, const int stuffing, const int limit)
+{
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= limit)
+    {
+        return;
+    }
+    // In the index calculus the first part shows the line, the second the column the third the color
+    const char value = input[offsetCut + idx / dimImgW / stuffing * dimImgIn + ((idx % dimImgW) / (stuffing * 3)) * 3 + idx % 3];
+    const int position = offsetScaled + idx / dimImgW * dimImgOut + idx % dimImgW;
+
+    __syncthreads();
+    output[position] = value;
+}
+
 __global__ void scaleGPU(const char *cutout, char *scaled, const int dimImgIn, const int dimImgMid, const int dimImgOut, const int offset)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;

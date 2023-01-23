@@ -13,26 +13,26 @@ __global__ void getCutout(char *img, char *cutout, int stpntY, int stpntX, int w
     __syncthreads();
 }
 
-__global__ void scaleGPU(char *cutout, char *scaled, int dimCut, int dimScaled, int dimSS, int offset)
+__global__ void scaleGPU(const char *cutout, char *scaled, const int dimImgIn, const int dimImgMid, const int dimImgOut, const int offset)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int stuffing = dimScaled / dimCut * 3;
-    if (idx >= dimScaled * dimScaled * 3)
+    int stuffing = dimImgMid / dimImgIn* 3;
+    if (idx >= dimImgMid * dimImgMid * 3)
     {
         return;
     }
     // In the index calculus the first part shows the line, the second the column the third the color
-    const char value = cutout[idx / dimScaled / stuffing * dimCut * 3 + (idx / 3 % dimScaled) / stuffing * 9 + idx % 3];
-    const int position = offset * 3 + offset * dimSS * 3 + idx / 3 / dimScaled * dimSS * 3 + idx % 3 + idx / 3 % dimScaled * 3;
+    const char value = cutout[idx / dimImgMid / stuffing * dimImgIn * 3 + (idx / 3 % dimImgMid) / stuffing * 9 + idx % 3];
+    const int position = offset * 3 + offset * dimImgOut * 3 + idx / 3 / dimImgMid * dimImgOut * 3 + idx % 3 + idx / 3 % dimImgMid * 3;
 
     __syncthreads();
     scaled[position] = value;
 }
 
-__global__ void basicConvGPU(const char *input, char *output, const int dim, const int dimKernel, const int dimB)
+__global__ void basicConvGPU(const char *input, char *output, const int dimImgIn, const int dimImgOut, const int dimKernel)
 {
     const int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= (dim * dim))
+    if (idx >= (dimImgOut * dimImgOut))
     {
         return;
     }
@@ -44,7 +44,7 @@ __global__ void basicConvGPU(const char *input, char *output, const int dim, con
     {
         for (int j = 0; j < dimKernel; j++)
         {
-            sum += input[(idx / dim + i) * dim + idx % dim + j + 3] * d_kernel[i * dimKernel + j];
+            sum += input[(idx / dimImgIn + i) * dimImgIn + idx % dimImgIn + j + 3] * d_kernel[i * dimKernel + j];
         }
     }
 
@@ -52,7 +52,7 @@ __global__ void basicConvGPU(const char *input, char *output, const int dim, con
     output[idx] = (unsigned char)sum;
 }
 
-__global__ void convGPU(const char *input, char *output, const int dimImgOut, const int dimKernel, const int dimImgIn, const int dimTileOut, const int dimTileIn)
+__global__ void convGPU(const char *input, char *output, const int dimImgIn, const int dimImgOut, const int dimKernel, const int dimTileIn, const int dimTileOut)
 {
     // Alloccate shared memory
     extern __shared__ unsigned char in_img_shared[];
@@ -74,12 +74,12 @@ __global__ void convGPU(const char *input, char *output, const int dimImgOut, co
         for (int m_row = 0; m_row < dimKernel; m_row++)
             for (int m_col = 0; m_col < dimKernel; m_col++)
                 sum += in_img_shared[(ty + m_row) * dimTileIn + tx + m_col] * d_kernel[m_row * dimKernel + m_col];
-        
+
         if (sum < 0)
             sum = 0;
         if (sum > 256)
             sum = 255;
-        if (row < dimImgIn && col < dimImgIn)
+        if (row < dimImgOut && col < dimImgOut)
         output[row * dimImgOut + col] = sum;
     }
 }

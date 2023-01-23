@@ -260,7 +260,7 @@ int main(int argc, char **argv)
 #if DEBUG
         printf("\nBasic Convolution:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads.x, usedBlocks.x);
 #endif
-        basicConvGPU<<<usedBlocks, usedThreads>>>(d_scale, d_out, outScaleDim * 3, maskDim, newOutSDim * 3);
+        basicConvGPU<<<usedBlocks, usedThreads>>>(d_scale, d_out, newOutSDim * 3,  outScaleDim * 3, maskDim);
     }
     else
     {
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
 #if DEBUG
         printf("\nConvolution:\nUsed Threads: %d - Used Blocks: %d - Shared Memory: %d - Tiles per block: %d - Wider Tiles's side: %d\n", usedThreads.x*usedThreads.y, usedBlocks.x*usedBlocks.y, sharedMem, numTilesPerBlock, biggerTilesPerBlock);
 #endif
-        convGPU<<<usedBlocks, usedThreads, sharedMem>>>(d_scale, d_out, outScaleDim * 3, maskDim, newOutSDim * 3, numTilesPerBlock, biggerTilesPerBlock);
+        convGPU<<<usedBlocks, usedThreads, sharedMem>>>(d_scale, d_out, newOutSDim * 3, outScaleDim * 3, maskDim, biggerTilesPerBlock, numTilesPerBlock);
     }
     cudaDeviceSynchronize();
 #if DEBUG

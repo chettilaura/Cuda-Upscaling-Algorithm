@@ -264,10 +264,11 @@ int main(int argc, char **argv)
     // Scale image from d_start to d_scale
     if (verbose)
         printf("Scaling image...\n"
-                "Used Threads: %d - Used Blocks: %d\n",
-                usedThreads.x, usedBlocks.x);
+                "Used Threads: %d - Used Blocks: %d\n"
+                "dimImgIn: %d - dimImgMid: %d - dimImgW: %d - dimImgOut: %d - offsetCut: %d - offsetScale: %d - stuffing: %d - limit: %d\n",
+                usedThreads.x, usedBlocks.x, img->width * 3, cutOutWidth * 3, outWidthDim * 3, scaleWidthDim * 3, (pointY * img->width + pointX) * 3, (scaleWidthDim + 1) * 3 * (maskDim / 2), zoomLevel, outPx);
 
-    scaleImage<<<usedBlocks, usedThreads>>>(d_start, d_scale, img->width * 3, cutOutWidth * 3, outWidthDim *3, scaleWidthDim * 3, (pointY * scaleWidthDim + pointX) * 3, (scaleWidthDim + 1) * 3 * (maskDim / 2), zoomLevel, outPx);
+    scaleImage<<<usedBlocks, usedThreads>>>(d_start, d_scale, img->width * 3, cutOutWidth * 3, outWidthDim *3, scaleWidthDim * 3, (pointY * img->width + pointX) * 3, (scaleWidthDim + 1) * 3 * (maskDim / 2), zoomLevel, outPx);
 
     /*
 #if DEBUG

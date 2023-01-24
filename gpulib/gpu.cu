@@ -20,7 +20,7 @@ __global__ void scaleImage(const char *input, char *output, const int dimImgIn, 
     {
         return;
     }
-    // In the index calculus the first part shows the line, the second the column the third the color
+    // In the index calculus the first part shows the offset from the starting points, then the line, the third the column and lastly the color
     const char value = input[offsetCut + idx / dimImgW / stuffing * dimImgIn + ((idx % dimImgW) / (stuffing * 3)) * 3 + idx % 3];
     const int position = offsetScaled + idx / dimImgW * dimImgOut + idx % dimImgW;
 

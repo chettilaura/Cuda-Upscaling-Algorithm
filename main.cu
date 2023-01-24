@@ -4,7 +4,6 @@
 #include "standlib/stdCu.h"
 
 #define N 9
-#define DEBUG 1
 
 bool replace(std::string &str, char c, char r)
 {
@@ -63,8 +62,7 @@ int main(int argc, char **argv)
 
     // Check if verbose mode is enabled
     std::string arg1 = argv[1];
-    bool verbose = arg1.find('v') != std::string::npos;//= replace(arg1, 'v', '\0');
-    //printf("Verbose mode: %s\n\targ1: %s\n", verbose ? "enabled" : "disabled", arg1.c_str());
+    bool verbose = arg1.find('v') != std::string::npos;
 
     // Check GPU
     int nDevices;
@@ -122,7 +120,8 @@ int main(int argc, char **argv)
             {
                 printf("Wrong input. Use -h or --help for more information\n");
                 return -1;
-            } else if (verbose)
+            }
+            else if (verbose)
                 printf("%f %f %f %f %f %f %f %f %f \n", kernel[i * maskDim], kernel[i * maskDim + 1], kernel[i * maskDim + 2], kernel[i * maskDim + 3], kernel[i * maskDim + 4], kernel[i * maskDim + 5], kernel[i * maskDim + 6], kernel[i * maskDim + 7], kernel[i * maskDim + 8]);
         }
         fclose(kernelFile);
@@ -165,20 +164,20 @@ int main(int argc, char **argv)
     else
     {
         printf("Wrong command line input. Use -h or --help for more information\n");
-        printf("arg1: %d, argc: %d\n", arg1[2] == 'v', argc);
+        printf("arg1: %s, argc: %d\n", arg1.c_str(), argc);
         return -1;
     }
     if (verbose)
         printf("Kernel loaded\n"
                "Mask dimension: %d\n"
-               "Proceeding with checks for scaling...\n", maskDim);
-
+               "Proceeding with checks for scaling...\n",
+               maskDim);
 
     // fine switch case
-    const int cutOutCenterX = (int)strtol(argv[3], NULL, 10);    // X coordinate of the center of the selection zone
-    const int cutOutCenterY = (int)strtol(argv[4], NULL, 10);    // Y coordinate of the center of the selection zone
-    const int cutOutWidth = (int)strtol(argv[5], NULL, 10);      // Length of the side of the selection mask
-    const int cutOutHeight = (int)strtol(argv[6], NULL, 10);     // Length of the side of the selection mask 
+    const int cutOutCenterX = (int)strtol(argv[3], NULL, 10); // X coordinate of the center of the selection zone
+    const int cutOutCenterY = (int)strtol(argv[4], NULL, 10); // Y coordinate of the center of the selection zone
+    const int cutOutWidth = (int)strtol(argv[5], NULL, 10);   // Length of the side of the selection mask
+    const int cutOutHeight = (int)strtol(argv[6], NULL, 10);  // Length of the side of the selection mask
     const int zoomLevel = (int)strtol(argv[7], NULL, 10);
 
     // check cutOutWidth is even
@@ -194,14 +193,15 @@ int main(int argc, char **argv)
         printf("Error: cutOutHeight must be even\n");
         return -1;
     }
-    
-    if(zoomLevel < 1 || zoomLevel > 32)
+
+    if (zoomLevel < 1 || zoomLevel > 32)
     {
         printf("Error: zoomLevel must be between 1 and 32\n");
         return -1;
     }
 
-    if (verbose) printf("cutOutCenterX: %d, cutOutCenterY: %d, cutOutWidth: %d, cutOutHeight: %d, zoomLevel: %d\n", cutOutCenterX, cutOutCenterY, cutOutWidth, cutOutHeight, zoomLevel);
+    if (verbose)
+        printf("cutOutCenterX: %d, cutOutCenterY: %d, cutOutWidth: %d, cutOutHeight: %d, zoomLevel: %d\n", cutOutCenterX, cutOutCenterY, cutOutWidth, cutOutHeight, zoomLevel);
 
     // Check input file ends with .ppm
     if (std::string(argv[2]).size() < 4 || std::string(argv[2]).substr(std::string(argv[2]).size() - 4) != ".ppm")
@@ -244,12 +244,12 @@ int main(int argc, char **argv)
     const int outPx = outWidthDim * outHeightDim * 3;
     const int scalePx = scaleWidthDim * scaleHeightDim * 3;
 
-    char *d_start, *d_cutout, *d_scale;
+    char *d_start, *d_scale;
     cudaMalloc((void **)&d_start, img->height * img->width * 3 * sizeof(char));
     cudaMalloc((void **)&d_scale, scalePx * sizeof(char));
     cudaMemcpy(d_start, img->data, img->height * img->width * 3 * sizeof(char), cudaMemcpyHostToDevice);
 
-    //int neededThreads = 32 / zoomLevel; // numero di thread necessari per ogni byte di output
+    // int neededThreads = 32 / zoomLevel; // numero di thread necessari per ogni byte di output
     dim3 usedThreads = (outPx > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : outPx;
 
     // calcolo numero blocchi necessari
@@ -264,71 +264,41 @@ int main(int argc, char **argv)
     // Scale image from d_start to d_scale
     if (verbose)
         printf("Scaling image...\n"
-                "Used Threads: %d - Used Blocks: %d\n"
-                "dimImgIn: %d - dimImgMid: %d - dimImgW: %d - dimImgOut: %d - offsetCut: %d - offsetScale: %d - stuffing: %d - limit: %d\n",
-                usedThreads.x, usedBlocks.x, img->width * 3, cutOutWidth * 3, outWidthDim * 3, scaleWidthDim * 3, (pointY * img->width + pointX) * 3, (scaleWidthDim + 1) * 3 * (maskDim / 2), zoomLevel, outPx);
+               "Used Threads: %d - Used Blocks: %d\n"
+               "dimImgIn: %d - dimImgMid: %d - dimImgW: %d - dimImgOut: %d - offsetCut: %d - offsetScale: %d - stuffing: %d - limit: %d\n",
+               usedThreads.x, usedBlocks.x, img->width * 3, cutOutWidth * 3, outWidthDim * 3, scaleWidthDim * 3, (pointY * img->width + pointX) * 3, (scaleWidthDim + 1) * 3 * (maskDim / 2), zoomLevel, outPx);
 
-    scaleImage<<<usedBlocks, usedThreads>>>(d_start, d_scale, img->width * 3, cutOutWidth * 3, outWidthDim *3, scaleWidthDim * 3, (pointY * img->width + pointX) * 3, (scaleWidthDim + 1) * 3 * (maskDim / 2), zoomLevel, outPx);
-
-    /*
-#if DEBUG
-    printf("\nCutout:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads.x, usedBlocks.x);
-#endif
-    getCutout<<<usedBlocks, usedThreads>>>(d_start, d_cutout, pointY, pointX, img->width, cutOutLength, cutOutLength);
+    scaleImage<<<usedBlocks, usedThreads>>>(d_start, d_scale, img->width * 3, cutOutWidth * 3, outWidthDim * 3, scaleWidthDim * 3, (pointY * img->width + pointX) * 3, (scaleWidthDim + 1) * 3 * (maskDim / 2), zoomLevel, outPx);
     cudaDeviceSynchronize();
-    destroyPPM(img);
-    cudaFree(d_start);
-#if DEBUG
-    RGBImage *imgCut = createPPM(cutOutLength, cutOutLength);
-    cudaMemcpy(imgCut->data, d_cutout, cutOutLength * cutOutLength * 3 * sizeof(char), cudaMemcpyDeviceToHost);
-    writePPM("DEBUG_cutout.ppm", imgCut);
-    destroyPPM(imgCut);
-    printf("\tDone Scaling\n");
-#endif
-
-    // Zooming
-    usedThreads = (pxCount > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : pxCount;
-    usedBlocks = (pxCount / prop.maxThreadsPerBlock) + 1;
-    if (usedBlocks.x > prop.maxGridSize[0])
+    if (verbose)
     {
-        printf("%s\n", cudaGetErrorString(err));
-        return -1;
+        printf("Scaled image created on disk\n");
+        RGBImage *scaled = createPPM(scaleWidthDim, scaleHeightDim);
+        cudaMemcpy(scaled->data, d_scale, scaleWidthDim * scaleHeightDim * 3 * sizeof(char), cudaMemcpyDeviceToHost);
+        cudaFree(d_scale);
+        writePPM("VERB_scaled.ppm", scaled);
+        destroyPPM(scaled);
     }
-#if DEBUG
-    printf("\nZooming:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads.x, usedBlocks.x);
-#endif
-    scaleGPU<<<usedBlocks, usedThreads>>>(d_cutout, d_scale, cutOutLength, outScaleDim, newOutSDim, maskDim / 2);
-    */
-    cudaDeviceSynchronize();
-    //cudaFree(d_cutout);
-    /*
-#if DEBUG
-    RGBImage *imgScale = createPPM(newOutSDim, newOutSDim);
-    cudaMemcpy(imgScale->data, d_scale, pxCnt * sizeof(char), cudaMemcpyDeviceToHost);
-    writePPM("DEBUG_scaled.ppm", imgScale);
-    destroyPPM(imgScale);
-    printf("\tDone Zooming\n");
-#endif*/
 
-    // Convolution 
-    /*char *d_out;
-    cudaMalloc((void **)&d_out, pxCount * sizeof(char));
+    // Convolution
+    char *d_out;
+    cudaMalloc((void **)&d_out, outPx * sizeof(char));
     const int elementsPerTile = ((int)sqrt(usedThreads.x) - (maskDim - 1));
-    const int numTilesPerBlock = getNumTilesPerBlock(elementsPerTile, outScaleDim);
-    if (numTilesPerBlock == 0 || ((pxCount % numTilesPerBlock) != 0))
+    const int numTilesPerBlock = getNumTilesPerBlock(elementsPerTile, outWidthDim);
+    if (numTilesPerBlock == 0 || ((outPx % numTilesPerBlock) != 0))
     {
         printf("Error: Cannot divide the image into tiles\nThe final image dimension must be a multiple of < %d for the system to use the tiling approach\nSwitching to naive solution\n", elementsPerTile);
-#if DEBUG
-        printf("\nBasic Convolution:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads.x, usedBlocks.x);
-#endif
-        basicConvGPU<<<usedBlocks, usedThreads>>>(d_scale, d_out, newOutSDim * 3, outScaleDim * 3, maskDim);
+        if (verbose)
+            printf("\nBasic Convolution:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads.x, usedBlocks.x);
+
+        basicConvGPU<<<usedBlocks, usedThreads>>>(d_scale, d_out, scaleWidthDim * 3, outWidthDim * 3, maskDim);
     }
     else
     {
         const int biggerTilesPerBlock = numTilesPerBlock + maskDim - 1;
         usedThreads.x = biggerTilesPerBlock;
         usedThreads.y = biggerTilesPerBlock;
-        const int res = outScaleDim / numTilesPerBlock * 3;
+        const int res = outWidthDim / numTilesPerBlock * 3;
         usedBlocks.x = res;
         usedBlocks.y = res;
         const int sharedMem = biggerTilesPerBlock * biggerTilesPerBlock * sizeof(char);
@@ -339,32 +309,26 @@ int main(int argc, char **argv)
             return -1;
         }
 
-#if DEBUG
-        printf("\nConvolution:\nUsed Threads: %d - Used Blocks: %d - Shared Memory: %d - Tiles per block: %d - Wider Tiles's side: %d\n", usedThreads.x * usedThreads.y, usedBlocks.x * usedBlocks.y, sharedMem, numTilesPerBlock, biggerTilesPerBlock);
-#endif
-        convGPU<<<usedBlocks, usedThreads, sharedMem>>>(d_scale, d_out, newOutSDim * 3, outScaleDim * 3, maskDim, biggerTilesPerBlock, numTilesPerBlock);
+        if (verbose)
+            printf("\nConvolution:\nUsed Threads: %d - Used Blocks: %d - Shared Memory: %d - Tiles per block: %d - Wider Tiles's side: %d\n", usedThreads.x * usedThreads.y, usedBlocks.x * usedBlocks.y, sharedMem, numTilesPerBlock, biggerTilesPerBlock);
+
+        convGPU<<<usedBlocks, usedThreads, sharedMem>>>(d_scale, d_out, scaleWidthDim * 3, outWidthDim * 3, maskDim, biggerTilesPerBlock, numTilesPerBlock);
     }
     cudaDeviceSynchronize();
-#if DEBUG
-    printf("\tDone Convoluting\nEND OF GPU INSTRUCTIONS\n\n");
-#endif
-    RGBImage *imgOut = createPPM(outScaleDim, outScaleDim);
-    cudaMemcpy(imgOut->data, d_out, pxCount * sizeof(char), cudaMemcpyDeviceToHost);
+    if (verbose)
+        printf("\tDone Convoluting\nEND OF GPU INSTRUCTIONS\n\n");
+
+    RGBImage *imgOut = createPPM(outWidthDim, outHeightDim);
+    cudaMemcpy(imgOut->data, d_out, outPx * sizeof(char), cudaMemcpyDeviceToHost);
     cudaFree(d_scale);
-    cudaFree(d_out);*/
+    cudaFree(d_out);
 
     // Print output
-    //writePPM("output.ppm", imgOut);
-    //destroyPPM(imgOut);
-    RGBImage *scaled = createPPM(scaleWidthDim, scaleHeightDim);
-    cudaMemcpy(scaled->data, d_scale, scaleWidthDim * scaleHeightDim * 3 * sizeof(char), cudaMemcpyDeviceToHost);
-    cudaFree(d_scale);
+    writePPM("output.ppm", imgOut);
+    destroyPPM(imgOut);
 
-    writePPM("VERB_scaled.ppm", scaled);
-    destroyPPM(scaled);
-
-if (verbose)
-    printf("END OF THE PROGRAM\n\n");
+    if (verbose)
+        printf("END OF THE PROGRAM\n\n");
 
     return 0;
 }

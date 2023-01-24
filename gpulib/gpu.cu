@@ -94,7 +94,7 @@ __global__ void convGPU(const char *input, char *output, const int dimImgIn, con
             sum = 0;
         if (sum > 256)
             sum = 255;
-        if (row < dimImgOut && col < dimImgOut)
+        if (row < dimImgIn && col < dimImgIn)
         output[row * dimImgOut + col] = sum;
     }
 }

@@ -1,6 +1,79 @@
 #include "gpu.cuh"
 #include <cmath>
 
+__global__ void tilingCudaUpscaling(const char *input, char *output, const int inWidth, const int inHeight, const int outWidth, const int outHeight, const int tileWidth, const int tileHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing)
+{
+    // Alloccate shared memory
+    extern __shared__ unsigned char in_img_shared[];
+
+    int ty = threadIdx.y; // t_row
+    int row = blockIdx.y * tileHeight + ty;
+    int row_i = row / stuffing + offsetCutY;
+
+    int tx = threadIdx.x; // t_col
+    int color = blockIdx.z % 3;
+    int col = blockIdx.x * tileWidth + tx;
+    int col_i = col / stuffing + offsetCutX;
+
+    //  Load the input image into shared memory
+    if ((row_i >= 0) && (row_i <inHeight) && (col_i >= 0) && (col_i < inWidth))
+        in_img_shared[ty * blockDim.x + tx] = input[(row_i * inWidth + col_i) * 3 + color];
+    else
+        in_img_shared[ty * blockDim.x + tx] = 0;
+    
+    __syncthreads();
+
+    float sum = 0;
+    if (ty < tileHeight && tx < tileWidth)
+    {
+        for (int m_row = 0; m_row < maskLength; m_row++)
+            for (int m_col = 0; m_col < maskLength; m_col++)
+                sum += in_img_shared[(ty + m_row) * blockDim.x + tx + m_col] * d_kernel[m_row * maskLength + m_col];
+
+        if (sum < 0)
+            sum = 0;
+        if (sum > 255)
+            sum = 255;
+        if (row < outHeight && col < outWidth)
+            output[(row * outWidth + col) * 3 + color] = sum;
+    }
+}
+
+
+__global__ void globalCudaUpscaling(const char *input, char *output, const int inWidth, const int inHeight, const int outWidth, const int outHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing)
+{    
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= outWidth * outHeight * 3)
+    {
+        return;
+    }
+    int color = idx % 3;
+    int row = idx / 3 / outWidth;
+    int col = idx / 3 % outWidth;
+    int row_i = row / stuffing + offsetCutY;
+    int col_i = col / stuffing + offsetCutX;
+
+    float sum = 0;
+    for (int m_row = 0; m_row < maskLength; m_row++)
+        for (int m_col = 0; m_col < maskLength; m_col++)
+            sum += input[((row_i + m_row) * inWidth + col_i + m_col) * 3 + color] * d_kernel[m_row * maskLength + m_col];
+
+    if (sum < 0)
+        sum = 0;
+    if (sum > 255)
+        sum = 255;
+    output[idx] = sum;
+    __syncthreads();
+}
+
+void loadKernel(const float *kernel, const int dimKernel)
+{
+    cudaMemcpyToSymbol(d_kernel, kernel, dimKernel * dimKernel * sizeof(float));
+}
+
+
+/* DEPRECATED FUNCTIONS */
+
 __global__ void getCutout(char *img, char *cutout, int stpntY, int stpntX, int width, int dimCutX, int dimCutY)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -31,7 +104,7 @@ __global__ void scaleImage(const char *input, char *output, const int dimImgIn, 
 __global__ void scaleGPU(const char *cutout, char *scaled, const int dimImgIn, const int dimImgMid, const int dimImgOut, const int offset)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int stuffing = dimImgMid / dimImgIn* 3;
+    int stuffing = dimImgMid / dimImgIn * 3;
     if (idx >= dimImgMid * dimImgMid * 3)
     {
         return;
@@ -74,10 +147,10 @@ __global__ void convGPU(const char *input, char *output, const int dimImgIn, con
 
     int ty = threadIdx.y; // t_row
     int row = blockIdx.y * dimTileOut + ty;
-    
+
     int tx = threadIdx.x; // t_col
     int color = blockIdx.x % 3;
-    int col = blockIdx.x / 3 * (dimTileOut*3) + tx * 3 + color;
+    int col = blockIdx.x / 3 * (dimTileOut * 3) + tx * 3 + color;
 
     // Load the input image into shared memory
     in_img_shared[tx + ty * dimTileIn] = input[row * dimImgIn + col];
@@ -95,11 +168,6 @@ __global__ void convGPU(const char *input, char *output, const int dimImgIn, con
         if (sum > 256)
             sum = 255;
         if (row < dimImgIn && col < dimImgIn)
-        output[row * dimImgOut + col] = sum;
+            output[row * dimImgOut + col] = sum;
     }
-}
-
-void loadKernel(const float *kernel, const int dimKernel)
-{
-    cudaMemcpyToSymbol(d_kernel, kernel, dimKernel * dimKernel * sizeof(float));
 }

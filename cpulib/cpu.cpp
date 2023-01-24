@@ -20,7 +20,6 @@ void convCPU(char *input, char *output, char *kernel, const int width, const int
     }
 }
 
-
 void gaussianKernelCPU(const int gaussLength, const float gaussSigma, float *kernel)
 {
     float sum = 0;
@@ -40,8 +39,6 @@ void gaussianKernelCPU(const int gaussLength, const float gaussSigma, float *ker
         }
     }
 }
-
-
 
 void zero_order_zoomingCPU(unsigned char *img, unsigned char *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height, int outDim)
 {
@@ -82,7 +79,8 @@ void zero_order_zoomingCPU(unsigned char *img, unsigned char *zoomed_out, int di
     }*/
 
     for (int i = 0; i < dimZoomY; i++)
-        for (int j = 0; j < dimZoomX; j++){
+        for (int j = 0; j < dimZoomX; j++)
+        {
             zoomed[(i + 1) * dimZoomX * 3 + (j + 1) * 3] = img[(x + j) * 3 + (y + i) * width * 3];
             zoomed[(i + 1) * dimZoomX * 3 + (j + 1) * 3 + 1] = img[(x + j) * 3 + (y + i) * width * 3 + 1];
             zoomed[(i + 1) * dimZoomX * 3 + (j + 1) * 3 + 2] = img[(x + j) * 3 + (y + i) * width * 3 + 2];
@@ -115,10 +113,32 @@ void zero_order_zoomingCPU(unsigned char *img, unsigned char *zoomed_out, int di
         }*/
 }
 
-int getNumTilesPerBlock(int maxElem, const int dim){
-    while(dim % maxElem != 0){
+bool checkTiling(const int width, const int height, int *dimTilesX, int *dimTilesY)
+{
+    const int back = *dimTilesY;
+
+    for (; *dimTilesX > 0; (*dimTilesX)--){
+        if (width % *dimTilesX == 0)
+        {
+            for (*dimTilesY = (2 * back) - *dimTilesX; *dimTilesY > 0; (*dimTilesY)--){
+                if (height % *dimTilesY == 0)
+                {
+                    printf("Tiling: %d x %d\n", *dimTilesX, *dimTilesY);
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+int getNumTilesPerBlock(int maxElem, const int dim)
+{
+    while (dim % maxElem != 0)
+    {
         maxElem--;
-        if (maxElem == 0){
+        if (maxElem == 0)
+        {
             return maxElem;
         }
     }

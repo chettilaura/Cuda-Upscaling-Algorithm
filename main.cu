@@ -3,25 +3,6 @@
 #include "gpulib/gpu.cuh"
 #include "standlib/stdCu.h"
 
-#define N 9
-
-bool replace(std::string &str, char c, char r)
-{
-    bool found = false;
-    int len = str.length();
-    for (int i = 0; i < len; i++)
-    {
-        printf("%c\n", str[i]);
-        if (str[i] == c)
-        {
-            str[i] = r;
-            printf("std::string: %s\n", str.c_str());
-            found = true;
-        }
-    }
-    return found;
-}
-
 int main(int argc, char **argv)
 {
     // Go to help
@@ -33,9 +14,10 @@ int main(int argc, char **argv)
             "Usage:\n\n"
             "    %s [Filtering Matrix generation's commands] inputFile.ppm cutOutCenterX cutOutCenterY cutOutWidth cutOutHeight zoomLevel [Matrix generation's parameters]\n\n"
             "  - Filtering Matrix generation's commands\n"
-            "\t -c[v] --custom[v]: Generate a custom matrix from the file passed as an argument in the Matrix generation's parameters\n"
-            "\t -g[v] --gauss[v]: Generate a gaussian matrix\n"
-            "\t Optional: v character to allow verbose mode and print debug information\n\n"
+            "\t -c[v][f] --custom[v][f]: Generate a custom matrix from the file passed as an argument in the Matrix generation's parameters\n"
+            "\t -g[v][f] --gauss[v][f]: Generate a gaussian matrix\n"
+            "\t Optional: v character to allow verbose mode and print debug information\n"
+            "\t Optional: f character to force the use of the global memory\n\n"
             "  - inputFile.ppm: A valid .ppm P6 input image\n"
             "  - cutOutCenterX: X coordinate of the center of the selection zone\n"
             "  - cutOutCenterY: Y coordinate of the center of the selection zone\n"
@@ -63,6 +45,7 @@ int main(int argc, char **argv)
     // Check if verbose mode is enabled
     std::string arg1 = argv[1];
     bool verbose = arg1.find('v') != std::string::npos;
+    bool forceGlobal = arg1.find('f') != std::string::npos;
 
     // Check GPU
     int nDevices;
@@ -173,12 +156,11 @@ int main(int argc, char **argv)
                "Proceeding with checks for scaling...\n",
                maskDim);
 
-    // fine switch case
     const int cutOutCenterX = (int)strtol(argv[3], NULL, 10); // X coordinate of the center of the selection zone
     const int cutOutCenterY = (int)strtol(argv[4], NULL, 10); // Y coordinate of the center of the selection zone
     const int cutOutWidth = (int)strtol(argv[5], NULL, 10);   // Length of the side of the selection mask
     const int cutOutHeight = (int)strtol(argv[6], NULL, 10);  // Length of the side of the selection mask
-    const int zoomLevel = (int)strtol(argv[7], NULL, 10);
+    const int zoomLevel = (int)strtol(argv[7], NULL, 10);     // Zoom level
 
     // check cutOutWidth is even
     if (cutOutWidth % 2 != 0)
@@ -215,12 +197,12 @@ int main(int argc, char **argv)
     const int pointY = cutOutCenterY - cutOutHeight / 2;
     if (cutOutCenterY > img->height || cutOutCenterY < 0)
     {
-        printf("Error: cutOutCenterY outside image boundaries");
+        printf("Error: cutOutCenterY outside image boundaries\n");
         return -1;
     }
     if ((cutOutCenterY + cutOutHeight / 2) > img->height - 1 || pointY < 1)
     {
-        printf("Error: Y mask outside image boundaries");
+        printf("Error: Y mask outside image boundaries\n");
         return -1;
     }
 
@@ -228,104 +210,114 @@ int main(int argc, char **argv)
     const int pointX = cutOutCenterX - cutOutWidth / 2;
     if (cutOutCenterX > img->width || cutOutCenterX < 0)
     {
-        printf("Error: cutOutCenterX outside image boundaries");
+        printf("Error: cutOutCenterX outside image boundaries\n");
         return -1;
     }
     if ((cutOutCenterX + cutOutWidth / 2) > img->width - 1 || pointX < 1)
     {
-        printf("Error: X mask outside image boundaries");
+        printf("Error: X mask outside image boundaries\n");
         return -1;
     }
 
-    const int outWidthDim = cutOutWidth * zoomLevel;
-    const int outHeightDim = cutOutHeight * zoomLevel;
-    const int scaleWidthDim = outWidthDim + maskDim - 1;
-    const int scaleHeightDim = outHeightDim + maskDim - 1;
-    const int outPx = outWidthDim * outHeightDim * 3;
-    const int scalePx = scaleWidthDim * scaleHeightDim * 3;
+    const int widthImgIn = img->width;
+    const int heightImgIn = img->height;
+    const int widthImgOut = cutOutWidth * zoomLevel;
+    const int heightImgOut = cutOutHeight * zoomLevel;
+    const int outPx = widthImgOut * heightImgOut * 3;
 
-    char *d_start, *d_scale;
+    char *d_start, *d_out;
     cudaMalloc((void **)&d_start, img->height * img->width * 3 * sizeof(char));
-    cudaMalloc((void **)&d_scale, scalePx * sizeof(char));
     cudaMemcpy(d_start, img->data, img->height * img->width * 3 * sizeof(char), cudaMemcpyHostToDevice);
+    destroyPPM(img);
+    cudaMalloc((void **)&d_out, outPx * sizeof(char));
 
-    // int neededThreads = 32 / zoomLevel; // numero di thread necessari per ogni byte di output
-    dim3 usedThreads = (outPx > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : outPx;
+    if (verbose)
+        printf("Image loaded\n"
+               "Image width: %d px\n"
+               "Image height: %d px\n"
+               "Image size: %d bytes\n"
+               "Output width: %d px\n"
+               "Output height: %d px\n"
+               "Output size: %d bytes\n",
+               widthImgIn, img->height, img->height * img->width * 3, widthImgOut, heightImgOut, outPx);
 
-    // calcolo numero blocchi necessari
-    dim3 usedBlocks = (outPx / prop.maxThreadsPerBlock) + 1;
-    // controllo numero blocchi utilizzabili
-    if (usedBlocks.x > prop.maxGridSize[0])
+    int widthTile = ((int)sqrt(prop.maxThreadsPerBlock) - (maskDim - 1));
+    int heightTile = widthTile;
+    if (checkTiling(widthImgOut, heightImgOut, &widthTile, &heightTile) && !forceGlobal)
+    // TRUE: Tiling approach doable
+    {
+        // Number of threads per block
+        dim3 usedThreads = dim3(widthTile + maskDim - 1, heightTile + maskDim - 1, 1);
+        // Number of blocks
+        dim3 usedBlocks = dim3(widthImgOut / widthTile, heightImgOut / heightTile, 3);
+        if(usedBlocks.x > prop.maxGridSize[0] || usedBlocks.y > prop.maxGridSize[1] || usedBlocks.z > prop.maxGridSize[2])
+        {
+            printf("Error: Blocks overflow\n");
+            return -1;
+        }
+        
+        // Bytes of shared memory per block
+        int sharedMemSize = (widthTile + maskDim - 1) * (heightTile + maskDim - 1) * sizeof(char);
+        if (sharedMemSize > prop.sharedMemPerBlock)
+        {
+            printf("Error: Shared memory overflow\n");
+            return -1;
+        }
+
+        if (verbose)
+            printf("Tiling approach executing...\n"
+                   "Threads per block: %d, %d, %d\n"
+                   "Blocks: %d, %d, %d\n"
+                   "Shared memory size: %d bytes\n"
+                   "Launching kernel...\n"
+                   "Parameters:\n"
+                   "",
+                   usedThreads.x, usedThreads.y, usedThreads.z, usedBlocks.x, usedBlocks.y, usedBlocks.z, sharedMemSize);
+
+        tilingCudaUpscaling<<<usedBlocks, usedThreads, sharedMemSize>>>(d_start, d_out, widthImgIn, heightImgIn, widthImgOut, heightImgOut, widthTile, heightTile, maskDim, (pointX - (maskDim / 2 / zoomLevel)), (pointY - (maskDim / 2 / zoomLevel)), zoomLevel);
+    }
+    else
+    // FALSE: Global memory approach is used
+    {
+        // Number of threads per block
+        dim3 usedThreads = (outPx > prop.maxThreadsPerBlock) ? prop.maxThreadsPerBlock : outPx;
+        // Number of blocks
+        dim3 usedBlocks = (outPx / prop.maxThreadsPerBlock) + 1;
+        if (usedBlocks.x > prop.maxGridSize[0])
+        {
+            printf("%s\n", cudaGetErrorString(err));
+            return -1;
+        }
+
+        if (verbose)
+            printf("Global memory approach executing...\n"
+                   "Threads per block: %d\n"
+                   "Blocks: %d\n"
+                   "Launching kernel...\n",
+                   usedThreads.x, usedBlocks.x);
+
+        globalCudaUpscaling<<<usedBlocks, usedThreads>>>(d_start, d_out, widthImgIn, heightImgIn, widthImgOut, heightImgOut, maskDim, (pointX - (maskDim / 2 / zoomLevel)), (pointY - (maskDim / 2 / zoomLevel)), zoomLevel);
+    }
+    cudaDeviceSynchronize();
+
+    // Check for errors
+    err = cudaGetLastError();
+    if (err != cudaSuccess)
     {
         printf("%s\n", cudaGetErrorString(err));
         return -1;
     }
 
-    // Scale image from d_start to d_scale
-    if (verbose)
-        printf("Scaling image...\n"
-               "Used Threads: %d - Used Blocks: %d\n"
-               "dimImgIn: %d - dimImgMid: %d - dimImgW: %d - dimImgOut: %d - offsetCut: %d - offsetScale: %d - stuffing: %d - limit: %d\n",
-               usedThreads.x, usedBlocks.x, img->width * 3, cutOutWidth * 3, outWidthDim * 3, scaleWidthDim * 3, (pointY * img->width + pointX) * 3, (scaleWidthDim + 1) * 3 * (maskDim / 2), zoomLevel, outPx);
+    // Copy result back to host
+    RGBImage *out = createPPM(widthImgOut, heightImgOut);
+    cudaMemcpy(out->data, d_out, outPx * sizeof(char), cudaMemcpyDeviceToHost);
 
-    scaleImage<<<usedBlocks, usedThreads>>>(d_start, d_scale, img->width * 3, cutOutWidth * 3, outWidthDim * 3, scaleWidthDim * 3, (pointY * img->width + pointX) * 3, (scaleWidthDim + 1) * 3 * (maskDim / 2), zoomLevel, outPx);
-    cudaDeviceSynchronize();
-    if (verbose)
-    {
-        printf("Scaled image created on disk\n");
-        RGBImage *scaled = createPPM(scaleWidthDim, scaleHeightDim);
-        cudaMemcpy(scaled->data, d_scale, scaleWidthDim * scaleHeightDim * 3 * sizeof(char), cudaMemcpyDeviceToHost);
-        cudaFree(d_scale);
-        writePPM("VERB_scaled.ppm", scaled);
-        destroyPPM(scaled);
-    }
-
-    // Convolution
-    char *d_out;
-    cudaMalloc((void **)&d_out, outPx * sizeof(char));
-    const int elementsPerTile = ((int)sqrt(usedThreads.x) - (maskDim - 1));
-    const int numTilesPerBlock = getNumTilesPerBlock(elementsPerTile, outWidthDim);
-    if (numTilesPerBlock == 0 || ((outPx % numTilesPerBlock) != 0))
-    {
-        printf("Error: Cannot divide the image into tiles\nThe final image dimension must be a multiple of < %d for the system to use the tiling approach\nSwitching to naive solution\n", elementsPerTile);
-        if (verbose)
-            printf("\nBasic Convolution:\nUsed Threads: %d - Used Blocks: %d\n", usedThreads.x, usedBlocks.x);
-
-        basicConvGPU<<<usedBlocks, usedThreads>>>(d_scale, d_out, scaleWidthDim * 3, outWidthDim * 3, maskDim);
-    }
-    else
-    {
-        const int biggerTilesPerBlock = numTilesPerBlock + maskDim - 1;
-        usedThreads.x = biggerTilesPerBlock;
-        usedThreads.y = biggerTilesPerBlock;
-        const int res = outWidthDim / numTilesPerBlock * 3;
-        usedBlocks.x = res;
-        usedBlocks.y = res;
-        const int sharedMem = biggerTilesPerBlock * biggerTilesPerBlock * sizeof(char);
-
-        if (sharedMem > prop.sharedMemPerBlock)
-        {
-            printf("Error: shared memory too small for the operation\n");
-            return -1;
-        }
-
-        if (verbose)
-            printf("\nConvolution:\nUsed Threads: %d - Used Blocks: %d - Shared Memory: %d - Tiles per block: %d - Wider Tiles's side: %d\n", usedThreads.x * usedThreads.y, usedBlocks.x * usedBlocks.y, sharedMem, numTilesPerBlock, biggerTilesPerBlock);
-
-        convGPU<<<usedBlocks, usedThreads, sharedMem>>>(d_scale, d_out, scaleWidthDim * 3, outWidthDim * 3, maskDim, biggerTilesPerBlock, numTilesPerBlock);
-    }
-    cudaDeviceSynchronize();
-    if (verbose)
-        printf("\tDone Convoluting\nEND OF GPU INSTRUCTIONS\n\n");
-
-    RGBImage *imgOut = createPPM(outWidthDim, outHeightDim);
-    cudaMemcpy(imgOut->data, d_out, outPx * sizeof(char), cudaMemcpyDeviceToHost);
-    cudaFree(d_scale);
+    cudaFree(d_start);
     cudaFree(d_out);
 
-    // Print output
-    writePPM("output.ppm", imgOut);
-    destroyPPM(imgOut);
+    // Write output file
+    writePPM("output.ppm", out);
+    destroyPPM(out);
 
     if (verbose)
         printf("END OF THE PROGRAM\n\n");

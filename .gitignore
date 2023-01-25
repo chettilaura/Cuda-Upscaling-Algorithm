@@ -7,7 +7,7 @@ output.ppm
 DEBUG*.ppm
 
 # Vscode settings
-settings.json
+.vscode
 
 # Mac shenanigans
 # General

@@ -85,27 +85,34 @@ int main(int argc, char **argv)
         }
 
         // Read file
-        char buff[120];
+        char buff[150];
         fgets(buff, 100, kernelFile);
         maskDim = (char)strtol(buff, NULL, 10);
         if (maskDim < 3 || maskDim > 15 || maskDim % 2 == 0)
         {
             printf("Wrong mask dimension. Use -h or --help for more information\n");
+            fclose(kernelFile);
             return -1;
         }
 
         // Allocate memory
         float *kernel = (float *)malloc(maskDim * maskDim * sizeof(float));
+
+        // Read file
         for (int i = 0; i < maskDim; i++)
         {
-            fgets(buff, 120, kernelFile);
-            if (sscanf(buff, "%f %f %f %f %f %f %f %f %f", &kernel[i * maskDim], &kernel[i * maskDim + 1], &kernel[i * maskDim + 2], &kernel[i * maskDim + 3], &kernel[i * maskDim + 4], &kernel[i * maskDim + 5], &kernel[i * maskDim + 6], &kernel[i * maskDim + 7], &kernel[i * maskDim + 8]) != maskDim)
+            fgets(buff, 150, kernelFile);
+            if (sscanf(buff, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f", &kernel[i * maskDim], &kernel[i * maskDim + 1], &kernel[i * maskDim + 2], &kernel[i * maskDim + 3], &kernel[i * maskDim + 4], &kernel[i * maskDim + 5], &kernel[i * maskDim + 6], &kernel[i * maskDim + 7], &kernel[i * maskDim + 8], &kernel[i * maskDim + 9], &kernel[i * maskDim + 10], &kernel[i * maskDim + 11], &kernel[i * maskDim + 12], &kernel[i * maskDim + 13], &kernel[i * maskDim + 14]) != maskDim)
             {
                 printf("Wrong input. Use -h or --help for more information\n");
+                fclose(kernelFile);
                 return -1;
             }
-            else if (verbose)
-                printf("%f %f %f %f %f %f %f %f %f \n", kernel[i * maskDim], kernel[i * maskDim + 1], kernel[i * maskDim + 2], kernel[i * maskDim + 3], kernel[i * maskDim + 4], kernel[i * maskDim + 5], kernel[i * maskDim + 6], kernel[i * maskDim + 7], kernel[i * maskDim + 8]);
+            else if (verbose){
+                for (int j = 0; j < maskDim; j++)
+                    printf("%f ", kernel[i * maskDim + j]);
+                printf("\n");
+            }
         }
         fclose(kernelFile);
 

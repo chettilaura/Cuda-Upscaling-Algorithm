@@ -345,7 +345,8 @@ int main(int argc, char **argv)
     destroyPPM(out);
 
     if (verbose)
-        printf("\nEND OF THE PROGRAM\n\n");
+        printf("Output file written\n"
+            "\nEND OF THE PROGRAM\n\n");
 
     return 0;
 }

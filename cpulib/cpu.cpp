@@ -40,6 +40,7 @@ bool checkTiling(const int width, const int height, int *dimTilesX, int *dimTile
 
 void convCPU(char *input, char *output, char *kernel, const int width, const int heigth)
 {
+    const int DIMKERNEL = 3; // Constant previously defined in stdCu.h
     for (int i = 0; i < width; i++)
     {
         for (int j = 0; j < heigth; j++)

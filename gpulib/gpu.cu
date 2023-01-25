@@ -1,7 +1,7 @@
 #include "gpu.cuh"
 #include <cmath>
 
-__global__ void tilingCudaUpscaling(const char *input, char *output, const int inWidth, const int inHeight, const int outWidth, const int outHeight, const int tileWidth, const int tileHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing)
+__global__ void tilingCudaUpscaling(const unsigned char *input, unsigned char *output, const int inWidth, const int inHeight, const int outWidth, const int outHeight, const int tileWidth, const int tileHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing)
 {
     // Alloccate shared memory
     extern __shared__ unsigned char in_img_shared[];
@@ -16,7 +16,7 @@ __global__ void tilingCudaUpscaling(const char *input, char *output, const int i
     int col_i = col / stuffing + offsetCutX;
 
     //  Load the input image into shared memory
-    if ((row_i >= 0) && (row_i <inHeight) && (col_i >= 0) && (col_i < inWidth))
+    if ((row_i >= 0) && (row_i < inHeight) && (col_i >= 0) && (col_i < inWidth))
         in_img_shared[ty * blockDim.x + tx] = input[(row_i * inWidth + col_i) * 3 + color];
     else
         in_img_shared[ty * blockDim.x + tx] = 0;
@@ -40,7 +40,7 @@ __global__ void tilingCudaUpscaling(const char *input, char *output, const int i
 }
 
 
-__global__ void globalCudaUpscaling(const char *input, char *output, const int inWidth, const int inHeight, const int outWidth, const int outHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing)
+__global__ void globalCudaUpscaling(const unsigned char *input, unsigned char *output, const int inWidth, const int inHeight, const int outWidth, const int outHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing)
 {    
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= outWidth * outHeight * 3)
@@ -48,15 +48,13 @@ __global__ void globalCudaUpscaling(const char *input, char *output, const int i
         return;
     }
     int color = idx % 3;
-    int row = idx / 3 / outWidth;
-    int col = idx / 3 % outWidth;
-    int row_i = row / stuffing + offsetCutY;
-    int col_i = col / stuffing + offsetCutX;
+    int row_i = offsetCutY + idx / 3 / outWidth / stuffing;
+    int col_i = offsetCutX + idx / 3 % outWidth / stuffing;
 
     float sum = 0;
     for (int m_row = 0; m_row < maskLength; m_row++)
         for (int m_col = 0; m_col < maskLength; m_col++)
-            sum += input[((row_i + m_row) * inWidth + col_i + m_col) * 3 + color] * d_kernel[m_row * maskLength + m_col];
+            sum += (((row_i >= 0 ) && (row_i < inHeight) && (col_i >= 0) && (col_i < inWidth)) ? input[((row_i + m_row / stuffing) * inWidth + col_i + m_col / stuffing) * 3 + color] : 0) * d_kernel[m_row * maskLength + m_col];
 
     if (sum < 0)
         sum = 0;

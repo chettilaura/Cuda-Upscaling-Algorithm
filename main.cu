@@ -225,7 +225,7 @@ int main(int argc, char **argv)
     const int heightImgOut = cutOutHeight * zoomLevel;
     const int outPx = widthImgOut * heightImgOut * 3;
 
-    char *d_start, *d_out;
+    unsigned char *d_start, *d_out;
     cudaMalloc((void **)&d_start, img->height * img->width * 3 * sizeof(char));
     cudaMemcpy(d_start, img->data, img->height * img->width * 3 * sizeof(char), cudaMemcpyHostToDevice);
     destroyPPM(img);

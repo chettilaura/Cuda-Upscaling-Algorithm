@@ -7,9 +7,9 @@
 
 __constant__ float d_kernel[MAX_KERNEL_LENGTH];
 
-__global__ void tilingCudaUpscaling(const char *input, char *output, const int inWidth, const int inHeight, const int outWidth, const int outHeight, const int tileWidth, const int tileHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing);
+__global__ void tilingCudaUpscaling(const unsigned char *input, unsigned char *output, const int inWidth, const int inHeight, const int outWidth, const int outHeight, const int tileWidth, const int tileHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing);
 
-__global__ void globalCudaUpscaling(const char *input, char *output, const int inWidth, const int inHeight, const int outWidth, const int outHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing);
+__global__ void globalCudaUpscaling(const unsigned char *input, unsigned char *output, const int inWidth, const int inHeight, const int outWidth, const int outHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing);
 
 void loadKernel(const float *kernel, const int dimKernel);
 

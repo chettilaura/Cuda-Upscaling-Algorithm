@@ -48,15 +48,14 @@ __global__ void globalCudaUpscaling(const unsigned char *input, unsigned char *o
         return;
     }
     int color = idx % 3;
-    int row = offsetCutY + idx / 3 / outWidth / stuffing;
-    int col = offsetCutX + idx / 3 % outWidth / stuffing;
+    int linePos = idx / 3;
     int row_i, col_i;
 
     float sum = 0;
     for (int m_row = 0; m_row < maskLength; m_row++)
         for (int m_col = 0; m_col < maskLength; m_col++){
-            row_i = row + m_row / stuffing;
-            col_i = col + m_col / stuffing;
+            row_i = offsetCutY + (linePos / outWidth + m_row) / stuffing;
+            col_i = offsetCutX + (linePos % outWidth + m_col) / stuffing;
             sum += ((row_i >= 0 ) && (row_i < inHeight) && (col_i >= 0) && (col_i < inWidth)) ? (input[((row_i) * inWidth + col_i) * 3 + color] * d_kernel[m_row * maskLength + m_col]) : 0;
         }
             

@@ -34,6 +34,7 @@ int main(int argc, char **argv)
             "\t\t\tRowElement ...\n"
             "\t\t\t...\n\n",
             argv[0]);
+            return 0;
     }
 
     if (argc < 9 || argc > 10)

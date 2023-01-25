@@ -24,11 +24,11 @@ void gaussianKernelCPU(const int gaussLength, const float gaussSigma, float *ker
 
 bool checkTiling(const int width, const int height, int *dimTilesX, int *dimTilesY)
 {
-    const int back = *dimTilesY;
+    const int back = *dimTilesY * 2;
 
     for (; *dimTilesX > 0; (*dimTilesX)--)
         if (width % *dimTilesX == 0)
-            for (*dimTilesY = (2 * back) - *dimTilesX; *dimTilesY > 0; (*dimTilesY)--)
+            for (*dimTilesY = back - *dimTilesX; *dimTilesY > 0; (*dimTilesY)--)
                 if (height % *dimTilesY == 0)
                     return true;
     

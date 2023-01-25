@@ -1,24 +1,6 @@
 #include "cpu.h"
 #include <cmath>
 
-void convCPU(char *input, char *output, char *kernel, const int width, const int heigth)
-{
-    for (int i = 0; i < width; i++)
-    {
-        for (int j = 0; j < heigth; j++)
-        {
-            int sum = 0;
-            for (int k = 0; k < DIMKERNEL; k++)
-            {
-                for (int l = 0; l < DIMKERNEL; l++)
-                {
-                    sum += input[(i + k) + (j + l) * width] * kernel[k * DIMKERNEL + l];
-                }
-            }
-            output[i + j * width] = sum;
-        }
-    }
-}
 
 void gaussianKernelCPU(const int gaussLength, const float gaussSigma, float *kernel)
 {
@@ -36,6 +18,41 @@ void gaussianKernelCPU(const int gaussLength, const float gaussSigma, float *ker
         for (int j = 0; j < gaussLength; j++)
         {
             kernel[i * gaussLength + j] /= sum;
+        }
+    }
+}
+
+bool checkTiling(const int width, const int height, int *dimTilesX, int *dimTilesY)
+{
+    const int back = *dimTilesY;
+
+    for (; *dimTilesX > 0; (*dimTilesX)--)
+        if (width % *dimTilesX == 0)
+            for (*dimTilesY = (2 * back) - *dimTilesX; *dimTilesY > 0; (*dimTilesY)--)
+                if (height % *dimTilesY == 0)
+                    return true;
+    
+    return false;
+}
+
+
+/* DEPRECATED FUNCTIONS */
+
+void convCPU(char *input, char *output, char *kernel, const int width, const int heigth)
+{
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < heigth; j++)
+        {
+            int sum = 0;
+            for (int k = 0; k < DIMKERNEL; k++)
+            {
+                for (int l = 0; l < DIMKERNEL; l++)
+                {
+                    sum += input[(i + k) + (j + l) * width] * kernel[k * DIMKERNEL + l];
+                }
+            }
+            output[i + j * width] = sum;
         }
     }
 }
@@ -111,36 +128,4 @@ void zero_order_zoomingCPU(unsigned char *img, unsigned char *zoomed_out, int di
                 }
             }
         }*/
-}
-
-bool checkTiling(const int width, const int height, int *dimTilesX, int *dimTilesY)
-{
-    const int back = *dimTilesY;
-
-    for (; *dimTilesX > 0; (*dimTilesX)--){
-        if (width % *dimTilesX == 0)
-        {
-            for (*dimTilesY = (2 * back) - *dimTilesX; *dimTilesY > 0; (*dimTilesY)--){
-                if (height % *dimTilesY == 0)
-                {
-                    printf("Tiling: %d x %d\n", *dimTilesX, *dimTilesY);
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-int getNumTilesPerBlock(int maxElem, const int dim)
-{
-    while (dim % maxElem != 0)
-    {
-        maxElem--;
-        if (maxElem == 0)
-        {
-            return maxElem;
-        }
-    }
-    return maxElem;
 }

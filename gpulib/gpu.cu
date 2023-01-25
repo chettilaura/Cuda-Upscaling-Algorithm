@@ -48,14 +48,18 @@ __global__ void globalCudaUpscaling(const unsigned char *input, unsigned char *o
         return;
     }
     int color = idx % 3;
-    int row_i = offsetCutY + idx / 3 / outWidth / stuffing;
-    int col_i = offsetCutX + idx / 3 % outWidth / stuffing;
+    int row = offsetCutY + idx / 3 / outWidth / stuffing;
+    int col = offsetCutX + idx / 3 % outWidth / stuffing;
+    int row_i, col_i;
 
     float sum = 0;
     for (int m_row = 0; m_row < maskLength; m_row++)
-        for (int m_col = 0; m_col < maskLength; m_col++)
-            sum += (((row_i >= 0 ) && (row_i < inHeight) && (col_i >= 0) && (col_i < inWidth)) ? input[((row_i + m_row / stuffing) * inWidth + col_i + m_col / stuffing) * 3 + color] : 0) * d_kernel[m_row * maskLength + m_col];
-
+        for (int m_col = 0; m_col < maskLength; m_col++){
+            row_i = row + m_row / stuffing;
+            col_i = col + m_col / stuffing;
+            sum += ((row_i >= 0 ) && (row_i < inHeight) && (col_i >= 0) && (col_i < inWidth)) ? (input[((row_i) * inWidth + col_i) * 3 + color] * d_kernel[m_row * maskLength + m_col]) : 0;
+        }
+            
     if (sum < 0)
         sum = 0;
     if (sum > 255)
@@ -63,6 +67,7 @@ __global__ void globalCudaUpscaling(const unsigned char *input, unsigned char *o
     output[idx] = sum;
     __syncthreads();
 }
+
 
 void loadKernel(const float *kernel, const int dimKernel)
 {

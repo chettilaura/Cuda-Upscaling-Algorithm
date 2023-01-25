@@ -8,7 +8,7 @@ int main(int argc, char **argv)
     // Go to help
     if (argc == 1 || (argc == 2 && (argv[1] == std::string("-h") || argv[1] == std::string("--help"))))
     {
-        printf(
+        printf("\n\n"
             "CUDA Upscale\n\n"
             "WARNING: This program is made only for educational purposes and is not intended to be used in production.\n\n"
             "Usage:\n\n"
@@ -32,13 +32,13 @@ int main(int argc, char **argv)
             "\t\t\tmatrixSide'sLength (must be odd)\n"
             "\t\t\tFirstElement SecondElement ...\n"
             "\t\t\tRowElement ...\n"
-            "\t\t\t...\n",
+            "\t\t\t...\n\n",
             argv[0]);
     }
 
     if (argc < 9 || argc > 10)
     {
-        printf("Wrong command line input. Use -h or --help for more information\n");
+        printf("\nWrong command line input. Use -h or --help for more information\n");
         return -1;
     }
 
@@ -57,12 +57,12 @@ int main(int argc, char **argv)
     }
     if (nDevices == 0)
     {
-        printf("No CUDA device found\n");
+        printf("\nNo CUDA device found\n");
         return -1;
     }
 
     if (verbose)
-        printf("Number of CUDA devices: %d\n", nDevices);
+        printf("\nNumber of CUDA devices: %d\n", nDevices);
 
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, 0);
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
         FILE *kernelFile = fopen(argv[8], "r");
         if (kernelFile == NULL)
         {
-            printf("Error opening file %s\n", argv[8]);
+            printf("\nError opening file %s\n", argv[8]);
             return -1;
         }
 
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
         maskDim = (char)strtol(buff, NULL, 10);
         if (maskDim < 3 || maskDim > 15 || maskDim % 2 == 0)
         {
-            printf("Wrong mask dimension. Use -h or --help for more information\n");
+            printf("\nWrong mask dimension. Use -h or --help for more information\n");
             fclose(kernelFile);
             return -1;
         }
@@ -154,12 +154,11 @@ int main(int argc, char **argv)
     else
     {
         printf("Wrong command line input. Use -h or --help for more information\n");
-        printf("arg1: %s, argc: %d\n", arg1.c_str(), argc);
         return -1;
     }
     if (verbose)
         printf("Kernel loaded\n"
-               "Mask dimension: %d\n"
+               "Mask dimension: %d\n\n"
                "Proceeding with checks for scaling...\n",
                maskDim);
 
@@ -172,30 +171,30 @@ int main(int argc, char **argv)
     // check cutOutWidth is even
     if (cutOutWidth % 2 != 0)
     {
-        printf("Error: cutOutWidth must be even\n");
+        printf("\nError: cutOutWidth must be even\n");
         return -1;
     }
 
     // check cutOutHeight is even
     if (cutOutHeight % 2 != 0)
     {
-        printf("Error: cutOutHeight must be even\n");
+        printf("\nError: cutOutHeight must be even\n");
         return -1;
     }
 
     if (zoomLevel < 1 || zoomLevel > 32)
     {
-        printf("Error: zoomLevel must be between 1 and 32\n");
+        printf("\nError: zoomLevel must be between 1 and 32\n");
         return -1;
     }
 
     if (verbose)
-        printf("cutOutCenterX: %d, cutOutCenterY: %d, cutOutWidth: %d, cutOutHeight: %d, zoomLevel: %d\n", cutOutCenterX, cutOutCenterY, cutOutWidth, cutOutHeight, zoomLevel);
+        printf("cutOutCenterX: %d, cutOutCenterY: %d, cutOutWidth: %d, cutOutHeight: %d, zoomLevel: %d\n\n", cutOutCenterX, cutOutCenterY, cutOutWidth, cutOutHeight, zoomLevel);
 
     // Check input file ends with .ppm
     if (std::string(argv[2]).size() < 4 || std::string(argv[2]).substr(std::string(argv[2]).size() - 4) != ".ppm")
     {
-        printf("Error: input file must be a .ppm file\n");
+        printf("\nError: input file must be a .ppm file\n");
         return -1;
     }
     RGBImage *img = readPPM(argv[2]);
@@ -204,12 +203,12 @@ int main(int argc, char **argv)
     const int pointY = cutOutCenterY - cutOutHeight / 2;
     if (cutOutCenterY > img->height || cutOutCenterY < 0)
     {
-        printf("Error: cutOutCenterY outside image boundaries\n");
+        printf("\nError: cutOutCenterY outside image boundaries\n");
         return -1;
     }
     if ((cutOutCenterY + cutOutHeight / 2) > img->height - 1 || pointY < 1)
     {
-        printf("Error: Y mask outside image boundaries\n");
+        printf("\nError: Y mask outside image boundaries\n");
         return -1;
     }
 
@@ -217,12 +216,12 @@ int main(int argc, char **argv)
     const int pointX = cutOutCenterX - cutOutWidth / 2;
     if (cutOutCenterX > img->width || cutOutCenterX < 0)
     {
-        printf("Error: cutOutCenterX outside image boundaries\n");
+        printf("\nError: cutOutCenterX outside image boundaries\n");
         return -1;
     }
     if ((cutOutCenterX + cutOutWidth / 2) > img->width - 1 || pointX < 1)
     {
-        printf("Error: X mask outside image boundaries\n");
+        printf("\nError: X mask outside image boundaries\n");
         return -1;
     }
 
@@ -245,7 +244,7 @@ int main(int argc, char **argv)
                "Image size: %d bytes\n"
                "Output width: %d px\n"
                "Output height: %d px\n"
-               "Output size: %d bytes\n",
+               "Output size: %d bytes\n\n",
                widthImgIn, img->height, img->height * img->width * 3, widthImgOut, heightImgOut, outPx);
 
     int widthTile = ((int)sqrt(prop.maxThreadsPerBlock) - (maskDim - 1));
@@ -259,7 +258,7 @@ int main(int argc, char **argv)
         dim3 usedBlocks = dim3(widthImgOut / widthTile, heightImgOut / heightTile, 3);
         if(usedBlocks.x > prop.maxGridSize[0] || usedBlocks.y > prop.maxGridSize[1] || usedBlocks.z > prop.maxGridSize[2])
         {
-            printf("Error: Blocks overflow\n");
+            printf("\nError: Blocks overflow\n");
             return -1;
         }
         
@@ -267,7 +266,7 @@ int main(int argc, char **argv)
         int sharedMemSize = (widthTile + maskDim - 1) * (heightTile + maskDim - 1) * sizeof(char);
         if (sharedMemSize > prop.sharedMemPerBlock)
         {
-            printf("Error: Shared memory overflow\n");
+            printf("\nError: Shared memory overflow\n");
             return -1;
         }
 
@@ -278,8 +277,17 @@ int main(int argc, char **argv)
                    "Shared memory size: %d bytes\n"
                    "Launching kernel...\n"
                    "Parameters:\n"
-                   "",
-                   usedThreads.x, usedThreads.y, usedThreads.z, usedBlocks.x, usedBlocks.y, usedBlocks.z, sharedMemSize);
+                   "ImgIn width: %d px\n"
+                   "ImgIn height: %d px\n"
+                   "ImgOut width: %d px\n"
+                   "ImgOut height: %d px\n"
+                   "Tile width: %d px\n"
+                   "Tile height: %d px\n"
+                   "Mask dimension: %d px\n"
+                   "offsetCutX: %d px\n"
+                   "offsetCutY: %d px\n"
+                   "zoomLevel: %d\n\n",
+                   usedThreads.x, usedThreads.y, usedThreads.z, usedBlocks.x, usedBlocks.y, usedBlocks.z, sharedMemSize, widthImgIn, heightImgIn, widthImgOut, heightImgOut, widthTile, heightTile, maskDim, (pointX - (maskDim / 2 / zoomLevel)), (pointY - (maskDim / 2 / zoomLevel)), zoomLevel);
 
         tilingCudaUpscaling<<<usedBlocks, usedThreads, sharedMemSize>>>(d_start, d_out, widthImgIn, heightImgIn, widthImgOut, heightImgOut, widthTile, heightTile, maskDim, (pointX - (maskDim / 2 / zoomLevel)), (pointY - (maskDim / 2 / zoomLevel)), zoomLevel);
     }
@@ -300,8 +308,17 @@ int main(int argc, char **argv)
             printf("Global memory approach executing...\n"
                    "Threads per block: %d\n"
                    "Blocks: %d\n"
-                   "Launching kernel...\n",
-                   usedThreads.x, usedBlocks.x);
+                   "Launching kernel...\n"
+                   "Parameters:\n"
+                   "ImgIn width: %d px\n"
+                   "ImgIn height: %d px\n"
+                   "ImgOut width: %d px\n"
+                   "ImgOut height: %d px\n"
+                   "Mask dimension: %d px\n"
+                   "offsetCutX: %d px\n"
+                   "offsetCutY: %d px\n"
+                   "zoomLevel: %d\n\n",
+                   usedThreads.x, usedBlocks.x, widthImgIn, heightImgIn, widthImgOut, heightImgOut, maskDim, (pointX - (maskDim / 2 / zoomLevel)), (pointY - (maskDim / 2 / zoomLevel)), zoomLevel);
 
         globalCudaUpscaling<<<usedBlocks, usedThreads>>>(d_start, d_out, widthImgIn, heightImgIn, widthImgOut, heightImgOut, maskDim, (pointX - (maskDim / 2 / zoomLevel)), (pointY - (maskDim / 2 / zoomLevel)), zoomLevel);
     }
@@ -327,7 +344,7 @@ int main(int argc, char **argv)
     destroyPPM(out);
 
     if (verbose)
-        printf("END OF THE PROGRAM\n\n");
+        printf("\nEND OF THE PROGRAM\n\n");
 
     return 0;
 }

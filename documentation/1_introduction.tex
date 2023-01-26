@@ -1,0 +1,27 @@
+\section{Introduction}
+
+In this paper we implement an upscaling algorithm in CUDA: It is a technique used to produce an enlarged picture from a given digital image while correcting the visual artifacts originated in the zooming process.
+
+
+Our zooming algorithm works on RGB images in PPM format:
+it provides as output a zoomed picture, cut out from the original one passed through the command line, while simultaneously correcting its aliased behavior by implementing a convolution with a specific filter.
+
+
+The user needs to set, through the command line, the RGB picture that has to be zoomed, the coordinates of the center of the selection zone and the side length of the selection mask which has a square odd shape.
+
+
+It is also left to the user to specify the filter to be applied in the convolution: it's both possible to set out a custom kernel or to create a Gaussian filter specifying GaussLength and GaussSigma.
+
+\section{Related works}
+
+    \subsection{The Pixel Replication Algorithm}
+    In our implementation of the zooming algorithm we develop the gpu version of the already existing algorithm named “Pixel replication” also known as the “Nearest neighbor interpolation”.\\
+    As its name suggests, it replicates the neighboring pixels in order to increase them in order to enlarge the image: it creates new pixels from the already given ones.\\
+    In this method each pixel is replicated n times row wise and column wise: therefore the size of the final image corresponds to (…) \\
+    This Algorithm has the advantage of being a very simple technique in implementing the zooming technique but, on the other hand, as the zooming factor increased the resulting image got more blurred.
+
+    \subsection{Image Filtering Convolution Algorithm}
+    In order to implement the convolution of the zoomed image, with a specified filter, we had to manipulate the already known version of the “Image filtering through convolution” Algorithm.
+    In the original implementation of the algorithm ..
+
+    

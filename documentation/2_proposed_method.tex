@@ -1,0 +1,55 @@
+\section{Proposed Method}
+
+In this section we will give to the lecturer a detailed description of the proposed algorithm: some of the implemented procedures will be explained through pseudo-code. 
+The algorithm works in successive stages as described in the following:
+
+\begin{itemize}
+    \item Image reading
+    \item Image cut out
+    \item Image enlargement and filling
+    \item Image enhancement
+\end{itemize}
+
+    \subsection{Image Cut-Out}
+    The aim of this step is to select the part of the original image that has to be trimmed: the dimension of the cut area is passed through command line and the script subsequently calculates the dimension of image in output.  \\ 
+    The measure of the side of the final image is computed choosing the largest multiple smaller than the smallest dimension between width and height of the original image.\\
+    %controlli per verificare che ritaglio non esca
+    The function version for the cpu is implemented as “zero order zooming” whereas the gpu version is implemented as “get cut out”: both of them carry out the same logic explained down below:
+
+    \begin{equation}
+        img_out[tid] = img[starting_byte + row_offset + column_offset]
+    \end{equation}
+
+    \subsection{Image Enlargement and Filling}
+    % //si capisce di quanto si deve zoomare confrontando dim ritaglio con (il multiplo più grande di dim ritaglio che stia all’interno di dim minore x dim minore) -> si capisce il fattore di ripetizione dei pixels 3 
+    % //si creano tanti threads quanti byte dell’immagine finale e ognuno si calcola il valore dall’immagine ritagliata -> si ripete byte in verticale e orizzontale tante volte quanto necessario -> filling the holes 
+
+    % //ripeti operazione di copia di un determinato pixel dall’immagine originale all’immagine finale tante volte quanto è il rapporto tra la dim dell’immagine finale e quella iniziale. 
+    % //calcoliamo separatamente l’indice che indica quale pixel copiare più volte e l’indice che indica dove andare a incollare più volte quel pixel. 
+    % //il singolo pixel diventa un quadrato di stuffing*stuffing pixels (in byte è stuffing*stuffing*3)
+
+    % //achtung: nel riempire la canvas dell’immagine scalata si lascia un bordo nero che servirà per parasi il fat ass nella convoluzione 
+
+    The function version for the cpu is implemented as “zero order zooming” whereas the gpu version is implemented as “scale GPU”: both of them carry out the same logic explained down below
+    \begin{equation}
+        img_out [coordinate_inizio_bordo + row_dim_largest_img + column_dim_largest_img + color_offset ] = img [row_offset_smaller_img + column_offset_smaller_img + color_offset_img]
+    \end{equation}
+
+    \subsection{Image Enhancement}
+    % versione1 GPU -> basicConvGpu (usata come fallback)
+    % versione2 GPU -> ConvGpu (tiling)
+    % {versione3 GPU -> ConvGpu (tiling + conflitti banchi shared)}
+
+    % classica convoluzione da memoria globale prende dati necessari, la maschera sta nella constant memory 
+
+    % versione tiling: difficoltà gestione dei 3 colori -> abbiamo gestito i colori singolarmente per blocco: i threads di ogni blocco lavorano su uno stesso colore.
+    % L’immagine è stata frammentata per lavorare su più parti in parallelo, ogni frammento di immagine espresso in pixel (tile) è elaborato a gruppi di tre blocks: uno per ogni colore  
+    % la chiamata kernel specifica la dimensione della shared memory: una per ogni blocco. 
+    % nel kernel TUTTI i threads del blocco partecipano a riempire la shared memory e poi solo alcuni di essi partecipano a calcolare la convoluzione con la maschera per quel blocco.
+    % Il numero dei threads per blocco è pari al numero dei bytes della shared memory (bigTileDim*bigTileDim)
+    % il riempimento della shared memory è fatto byte per byte e non pixel x pixel quindi gli offset di riempimento devono tenere conto di questo 
+    % la convoluzione è fatta tra il singolo canale-colore del pixel e la maschera 
+    % come indici dei threads usiamo threadId.x & threadId.y perchè così ci aiutano ad avere degli indici sensati per  spostarci logicamente nella matrice sia per il riempimento della shared memory che per la convoluzione (ma in realtà avremmo potuto usare una sola dimensione per gli indici dei threads)
+    % con il termine ti tiling ci riferiamo all’utilizzo della shared memory per assegnazione ai blocchi del materiale su cui lavorare. 
+
+

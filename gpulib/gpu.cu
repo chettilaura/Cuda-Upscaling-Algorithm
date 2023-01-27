@@ -16,11 +16,7 @@ __global__ void tilingCudaUpscaling(const unsigned char *input, unsigned char *o
     int col_i = col / stuffing + offsetCutX;
 
     //  Load the input image into shared memory
-    if ((row_i >= 0) && (row_i < inHeight) && (col_i >= 0) && (col_i < inWidth))
-        in_img_shared[ty * blockDim.x + tx] = input[(row_i * inWidth + col_i) * 3 + color];
-    else
-        in_img_shared[ty * blockDim.x + tx] = 0;
-    
+    in_img_shared[ty * blockDim.x + tx] = input[(((row_i < 0) ? 0 : ((row_i < inHeight) ? row_i : (inHeight - 1))) * inWidth + ((col_i < 0) ? 0 : ((col_i < inWidth) ? col_i : (inWidth - 1)))) * 3 + color];
     __syncthreads();
 
     float sum = 0;

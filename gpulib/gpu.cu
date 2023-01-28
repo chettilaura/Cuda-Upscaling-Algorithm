@@ -52,7 +52,7 @@ __global__ void globalCudaUpscaling(const unsigned char *input, unsigned char *o
         for (int m_col = 0; m_col < maskLength; m_col++){
             row_i = offsetCutY + (linePos / outWidth + m_row) / stuffing;
             col_i = offsetCutX + (linePos % outWidth + m_col) / stuffing;
-            sum += ((row_i >= 0 ) && (row_i < inHeight) && (col_i >= 0) && (col_i < inWidth)) ? (input[((row_i) * inWidth + col_i) * 3 + color] * d_kernel[m_row * maskLength + m_col]) : 0;
+            sum += input[((((row_i < 0) ? 0 : ((row_i < inHeight) ? row_i : (inHeight - 1))) * inWidth + ((col_i < 0) ? 0 : ((col_i < inWidth) ? col_i : (inWidth - 1)))) * 3 + color)] * d_kernel[m_row * maskLength + m_col];
         }
             
     if (sum < 0)

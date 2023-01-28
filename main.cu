@@ -160,7 +160,7 @@ int main(int argc, char **argv)
     if (verbose)
         printf("Kernel loaded\n"
                "Mask dimension: %d\n\n"
-               "Proceeding with checks for scaling...\n",
+               "Proceeding with parameters' check...\n",
                maskDim);
 
     const int cutOutCenterX = (int)strtol(argv[3], NULL, 10); // X coordinate of the center of the selection zone
@@ -169,29 +169,22 @@ int main(int argc, char **argv)
     const int cutOutHeight = (int)strtol(argv[6], NULL, 10);  // Length of the side of the selection mask
     const int zoomLevel = (int)strtol(argv[7], NULL, 10);     // Zoom level
 
-    // check cutOutWidth is even
-    if (cutOutWidth % 2 != 0)
-    {
-        printf("\nError: cutOutWidth must be even\n");
-        return -1;
-    }
+    if (verbose)
+        printf("Parameters received:\n"
+               "\tcutOutCenterX: %d\n"
+               "\tcutOutCenterY: %d\n"
+               "\tcutOutWidth: %d\n"
+               "\tcutOutHeight: %d\n"
+               "\tzoomLevel: %d\n\n",
+               cutOutCenterX, cutOutCenterY, cutOutWidth, cutOutHeight, zoomLevel);
 
-    // check cutOutHeight is even
-    if (cutOutHeight % 2 != 0)
-    {
-        printf("\nError: cutOutHeight must be even\n");
-        return -1;
-    }
-
+    // Check zoom level
     if (zoomLevel < 1 || zoomLevel > 32)
     {
         printf("\nError: zoomLevel must be between 1 and 32\n");
         return -1;
     }
-
-    if (verbose)
-        printf("cutOutCenterX: %d, cutOutCenterY: %d, cutOutWidth: %d, cutOutHeight: %d, zoomLevel: %d\n\n", cutOutCenterX, cutOutCenterY, cutOutWidth, cutOutHeight, zoomLevel);
-
+    
     // Check input file ends with .ppm
     if (std::string(argv[2]).size() < 4 || std::string(argv[2]).substr(std::string(argv[2]).size() - 4) != ".ppm")
     {
@@ -200,27 +193,27 @@ int main(int argc, char **argv)
     }
     RGBImage *img = readPPM(argv[2]);
 
-    // Y boundaries check and mask check
+    // Y boundaries check and cutout check
     const int pointY = cutOutCenterY - cutOutHeight / 2;
     if (cutOutCenterY > img->height || cutOutCenterY < 0)
     {
         printf("\nError: cutOutCenterY outside image boundaries\n");
         return -1;
     }
-    if ((cutOutCenterY + cutOutHeight / 2) > img->height - 1 || pointY < 1)
+    if ((cutOutCenterY + cutOutHeight - cutOutHeight / 2) > img->height || pointY < 0)
     {
         printf("\nError: Y mask outside image boundaries\n");
         return -1;
     }
 
-    // X boundaries check and mask check
+    // X boundaries check and cutout check
     const int pointX = cutOutCenterX - cutOutWidth / 2;
     if (cutOutCenterX > img->width || cutOutCenterX < 0)
     {
         printf("\nError: cutOutCenterX outside image boundaries\n");
         return -1;
     }
-    if ((cutOutCenterX + cutOutWidth / 2) > img->width - 1 || pointX < 1)
+    if ((cutOutCenterX + cutOutWidth - cutOutWidth / 2) > img->width || pointX < 0)
     {
         printf("\nError: X mask outside image boundaries\n");
         return -1;
@@ -250,7 +243,8 @@ int main(int argc, char **argv)
 
     int widthTile = ((int)sqrt(prop.maxThreadsPerBlock) - (maskDim - 1));
     int heightTile = widthTile;
-    if (checkTiling(widthImgOut, heightImgOut, &widthTile, &heightTile) && !forceGlobal)
+    setTiling(widthImgOut, heightImgOut, &widthTile, &heightTile);
+    if ((widthTile * heightTile != 1) && !forceGlobal)
     // TRUE: Tiling approach doable
     {
         // Number of threads per block

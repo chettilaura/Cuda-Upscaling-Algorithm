@@ -7,8 +7,8 @@
 void gaussianKernelCPU(const int gaussLength, const float gaussSigma, float *outkernel);
 // Generates a gaussian kernel of length gaussLength and sigma gaussSigma
 
-bool checkTiling(const int width, const int height, int *dimTilesX, int *dimTilesY);
-// Checks if the image can be tiled with dimTilesX and dimTilesY
+void setTiling(const int width, const int height, int *dimTilesX, int *dimTilesY);
+// Sets the tiling for the convolution
 
 
 /* DEPRECATED FUNCTIONS */

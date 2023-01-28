@@ -295,7 +295,7 @@ int main(int argc, char **argv)
         dim3 usedBlocks = (outPx / prop.maxThreadsPerBlock) + 1;
         if (usedBlocks.x > prop.maxGridSize[0])
         {
-            printf("%s\n", cudaGetErrorString(err));
+            printf("\nError: Blocks overflow\n");
             return -1;
         }
 

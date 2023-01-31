@@ -2,8 +2,8 @@
 
 #include "../standlib/stdCu.h"
 
-#define MAX_KERNEL_LENGTH 225
-#define MAX_DIM 15
+#define MAX_KERNEL_LENGTH 16129
+#define MAX_KERNEL_DIM 127
 
 __constant__ float d_kernel[MAX_KERNEL_LENGTH];
 

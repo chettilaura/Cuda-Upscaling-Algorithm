@@ -26,8 +26,8 @@ int main(int argc, char **argv)
             "  - zoomLevel: Zoom level of the output image, must be a INT value bigger than 0\n"
             "               If 1 is inserted, only the convolution will be performed\n\n"
             "  - Matrix generation's parameters\n"
-            "\t GaussLength: must be an odd value from 3 to 15 sides included\n"
-            "\t GaussSigma: must be a value from 0.5 to 5 sides included\n"
+            "\t GaussLength: must be an odd value from 3 to 127 sides included\n"
+            "\t GaussSigma: must be a value from 0.5 onwards side included\n"
             "\t InputKernelFile.txt: formatted as such\n\n"
             "\t\t\tmatrixSide'sLength (must be odd)\n"
             "\t\t\tFirstElement SecondElement ...\n"
@@ -86,12 +86,13 @@ int main(int argc, char **argv)
         }
 
         // Read file
-        char buff[150];
+        char *buff = (char *)malloc(128 * 10 * sizeof(char));
         fgets(buff, 100, kernelFile);
         maskDim = (char)strtol(buff, NULL, 10);
-        if (maskDim < 3 || maskDim > 15 || maskDim % 2 == 0)
+        if (maskDim < 3 || maskDim > MAX_KERNEL_DIM || maskDim % 2 == 0)
         {
             printf("\nWrong mask dimension. Use -h or --help for more information\n");
+            free(buff);
             fclose(kernelFile);
             return -1;
         }
@@ -102,10 +103,12 @@ int main(int argc, char **argv)
         // Read file
         for (int i = 0; i < maskDim; i++)
         {
-            fgets(buff, 150, kernelFile);
-            if (sscanf(buff, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f", &kernel[i * maskDim], &kernel[i * maskDim + 1], &kernel[i * maskDim + 2], &kernel[i * maskDim + 3], &kernel[i * maskDim + 4], &kernel[i * maskDim + 5], &kernel[i * maskDim + 6], &kernel[i * maskDim + 7], &kernel[i * maskDim + 8], &kernel[i * maskDim + 9], &kernel[i * maskDim + 10], &kernel[i * maskDim + 11], &kernel[i * maskDim + 12], &kernel[i * maskDim + 13], &kernel[i * maskDim + 14]) != maskDim)
+            fgets(buff, 1280, kernelFile);
+            if (sscanf(buff, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f", &kernel[i * maskDim], &kernel[i * maskDim + 1], &kernel[i * maskDim + 2], &kernel[i * maskDim + 3], &kernel[i * maskDim + 4], &kernel[i * maskDim + 5], &kernel[i * maskDim + 6], &kernel[i * maskDim + 7], &kernel[i * maskDim + 8], &kernel[i * maskDim + 9], &kernel[i * maskDim + 10], &kernel[i * maskDim + 11], &kernel[i * maskDim + 12], &kernel[i * maskDim + 13], &kernel[i * maskDim + 14], &kernel[i * maskDim + 15], &kernel[i * maskDim + 16], &kernel[i * maskDim + 17], &kernel[i * maskDim + 18], &kernel[i * maskDim + 19], &kernel[i * maskDim + 20], &kernel[i * maskDim + 21], &kernel[i * maskDim + 22], &kernel[i * maskDim + 23], &kernel[i * maskDim + 24], &kernel[i * maskDim + 25], &kernel[i * maskDim + 26], &kernel[i * maskDim + 27], &kernel[i * maskDim + 28], &kernel[i * maskDim + 29], &kernel[i * maskDim + 30], &kernel[i * maskDim + 31], &kernel[i * maskDim + 32], &kernel[i * maskDim + 33], &kernel[i * maskDim + 34], &kernel[i * maskDim + 35], &kernel[i * maskDim + 36], &kernel[i * maskDim + 37], &kernel[i * maskDim + 38], &kernel[i * maskDim + 39], &kernel[i * maskDim + 40], &kernel[i * maskDim + 41], &kernel[i * maskDim + 42], &kernel[i * maskDim + 43], &kernel[i * maskDim + 44], &kernel[i * maskDim + 45], &kernel[i * maskDim + 46], &kernel[i * maskDim + 47], &kernel[i * maskDim + 48], &kernel[i * maskDim + 49], &kernel[i * maskDim + 50], &kernel[i * maskDim + 51], &kernel[i * maskDim + 52], &kernel[i * maskDim + 53], &kernel[i * maskDim + 54], &kernel[i * maskDim + 55], &kernel[i * maskDim + 56], &kernel[i * maskDim + 57], &kernel[i * maskDim + 58], &kernel[i * maskDim + 59], &kernel[i * maskDim + 60], &kernel[i * maskDim + 61], &kernel[i * maskDim + 62], &kernel[i * maskDim + 63], &kernel[i * maskDim + 64], &kernel[i * maskDim + 65], &kernel[i * maskDim + 66], &kernel[i * maskDim + 67], &kernel[i * maskDim + 68], &kernel[i * maskDim + 69], &kernel[i * maskDim + 70], &kernel[i * maskDim + 71], &kernel[i * maskDim + 72], &kernel[i * maskDim + 73], &kernel[i * maskDim + 74], &kernel[i * maskDim + 75], &kernel[i * maskDim + 76], &kernel[i * maskDim + 77], &kernel[i * maskDim + 78], &kernel[i * maskDim + 79], &kernel[i * maskDim + 80],  &kernel[i * maskDim + 81], &kernel[i * maskDim + 82], &kernel[i * maskDim + 83], &kernel[i * maskDim + 84], &kernel[i * maskDim + 85], &kernel[i * maskDim + 86], &kernel[i * maskDim + 87], &kernel[i * maskDim + 88], &kernel[i * maskDim + 89], &kernel[i * maskDim + 90], &kernel[i * maskDim + 91], &kernel[i * maskDim + 92], &kernel[i * maskDim + 93], &kernel[i * maskDim + 94], &kernel[i * maskDim + 95], &kernel[i * maskDim + 96], &kernel[i * maskDim + 97], &kernel[i * maskDim + 98], &kernel[i * maskDim + 99], &kernel[i * maskDim + 100], &kernel[i * maskDim + 101], &kernel[i * maskDim + 102], &kernel[i * maskDim + 103], &kernel[i * maskDim + 104], &kernel[i * maskDim + 105], &kernel[i * maskDim + 106], &kernel[i * maskDim + 107], &kernel[i * maskDim + 108], &kernel[i * maskDim + 109], &kernel[i * maskDim + 110], &kernel[i * maskDim + 111], &kernel[i * maskDim + 112], &kernel[i * maskDim + 113], &kernel[i * maskDim + 114], &kernel[i * maskDim + 115], &kernel[i * maskDim + 116], &kernel[i * maskDim + 117], &kernel[i * maskDim + 118], &kernel[i * maskDim + 119], &kernel[i * maskDim + 120], &kernel[i * maskDim + 122], &kernel[i * maskDim + 122], &kernel[i * maskDim + 123], &kernel[i * maskDim + 124], &kernel[i * maskDim + 125], &kernel[i * maskDim + 126]) != maskDim)
             {
                 printf("Wrong input. Use -h or --help for more information\n");
+                free(buff);
+                free(kernel);
                 fclose(kernelFile);
                 return -1;
             }
@@ -115,6 +118,7 @@ int main(int argc, char **argv)
                 printf("\n");
             }
         }
+        free(buff);
         fclose(kernelFile);
 
         // Copy to device
@@ -126,9 +130,9 @@ int main(int argc, char **argv)
     {
         int gaussLength = (int)strtol(argv[8], NULL, 10);
         float gaussSigma = (float)strtof(argv[9], NULL);
-        if (gaussLength < 3 || gaussLength > 15 || gaussLength % 2 == 0 || gaussSigma < 0.5 || gaussSigma > 5)
+        if (gaussLength < 3 || gaussLength > MAX_KERNEL_DIM || gaussLength % 2 == 0 || gaussSigma < 0.5)
         {
-            printf("Wrong Gaussian values:\nACCEPTED VALUES:\n\t 3 <= gaussLength (must be odd) <= 15\n\t 0.5 <= gaussSigma <= 5\nAborting...\n");
+            printf("Wrong Gaussian values:\nACCEPTED VALUES:\n\t 3 <= gaussLength (must be odd) <= %d\n\t 0.5 <= gaussSigma\nAborting...\n", MAX_KERNEL_DIM);
             return -1;
         }
         float *gaussKernel = (float *)malloc(gaussLength * gaussLength * sizeof(float));
@@ -293,9 +297,11 @@ int main(int argc, char **argv)
     // Sets the maximum possible number of threads per block
     int widthTile = ((int)sqrt(prop.maxThreadsPerBlock) - (maskDim - 1));
     int heightTile = widthTile;
+    
+    // Finds the best tiling if the mask doesn't occupy the whole tile(/block)
+    if (widthTile > 1) setTiling(widthImgOut, heightImgOut, &widthTile, &heightTile);
+    else widthTile = heightTile = 1;
 
-    // Finds the best tiling
-    setTiling(widthImgOut, heightImgOut, &widthTile, &heightTile);
     if ((widthTile * heightTile != 1) && !forceGlobal)
     // TRUE: Tiling approach doable
     {

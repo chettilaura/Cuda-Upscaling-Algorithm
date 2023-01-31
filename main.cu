@@ -23,7 +23,7 @@ int main(int argc, char **argv)
             "  - cutOutCenterY: Y coordinate of the center of the selection zone\n"
             "  - cutOutWidth: Length of the side of the selection\n\n"
             "  - cutOutHeight: Length of the side of the selection\n\n"
-            "  - zoomLevel: Zoom level of the output image, must be a INT value from 1 to 32\n"
+            "  - zoomLevel: Zoom level of the output image, must be a INT value bigger than 0\n"
             "               If 1 is inserted, only the convolution will be performed\n\n"
             "  - Matrix generation's parameters\n"
             "\t GaussLength: must be an odd value from 3 to 15 sides included\n"
@@ -179,9 +179,9 @@ int main(int argc, char **argv)
                cutOutCenterX, cutOutCenterY, cutOutWidth, cutOutHeight, zoomLevel);
 
     // Check zoom level
-    if (zoomLevel < 1 || zoomLevel > 32)
+    if (zoomLevel < 1)
     {
-        printf("\nError: zoomLevel must be between 1 and 32\n");
+        printf("\nError: zoomLevel must be bigger than 0\n");
         return -1;
     }
     
@@ -198,11 +198,13 @@ int main(int argc, char **argv)
     if (cutOutCenterY > img->height || cutOutCenterY < 0)
     {
         printf("\nError: cutOutCenterY outside image boundaries\n");
+        destroyPPM(img);
         return -1;
     }
     if ((cutOutCenterY + cutOutHeight - cutOutHeight / 2) > img->height || pointY < 0)
     {
         printf("\nError: Y mask outside image boundaries\n");
+        destroyPPM(img);
         return -1;
     }
 
@@ -211,38 +213,88 @@ int main(int argc, char **argv)
     if (cutOutCenterX > img->width || cutOutCenterX < 0)
     {
         printf("\nError: cutOutCenterX outside image boundaries\n");
+        destroyPPM(img);
         return -1;
     }
     if ((cutOutCenterX + cutOutWidth - cutOutWidth / 2) > img->width || pointX < 0)
     {
         printf("\nError: X mask outside image boundaries\n");
+        destroyPPM(img);
         return -1;
     }
 
-    const int widthImgIn = img->width;
-    const int heightImgIn = img->height;
-    const int widthImgOut = cutOutWidth * zoomLevel;
-    const int heightImgOut = cutOutHeight * zoomLevel;
-    const int outPx = widthImgOut * heightImgOut * 3;
+    // Define input and output image sizes
+    const size_t widthImgIn = img->width;
+    const size_t heightImgIn = img->height;
+    const size_t widthImgOut = cutOutWidth * zoomLevel;
+    const size_t heightImgOut = cutOutHeight * zoomLevel;
+    const size_t outPx = widthImgOut * heightImgOut * 3;
+
+    // Check input image size
+    if(((unsigned int)(widthImgIn * heightImgIn * 3)) > INT32_MAX)
+    {
+        printf("\nError: input image too big\n"
+        "Width * Height * 3 must be less than %d\n", INT32_MAX);
+        destroyPPM(img);
+        return -1;
+    }
+
+    // Check output image size
+    if(outPx > INT32_MAX)
+    {
+        printf("\nError: output image too big\n"
+        "cutOutWidth * zoomLevel * cutOutHeight * zoomLevel * 3 must be less than %d\n", INT32_MAX);
+        destroyPPM(img);
+        return -1;
+    }
 
     unsigned char *d_start, *d_out;
-    cudaMalloc((void **)&d_start, img->height * img->width * 3 * sizeof(char));
-    cudaMemcpy(d_start, img->data, img->height * img->width * 3 * sizeof(char), cudaMemcpyHostToDevice);
+
+    // Allocate memory for the starting image on device
+    err = cudaMalloc((void **)&d_start, img->height * img->width * 3 * sizeof(char));
+    if (err != cudaSuccess)
+    {
+        printf("Error allocating memory for the starting image on device: %s", cudaGetErrorString(err));
+        destroyPPM(img);
+        return -1;
+    }
+
+    // Copy starting image to device
+    err = cudaMemcpy(d_start, img->data, img->height * img->width * 3 * sizeof(char), cudaMemcpyHostToDevice);
+    if (err != cudaSuccess)
+    {
+        printf("Error copying starting image to device: %s", cudaGetErrorString(err));
+        cudaFree(d_start);
+        destroyPPM(img);
+        return -1;
+    }
+    // Free memory for the starting image on host
     destroyPPM(img);
-    cudaMalloc((void **)&d_out, outPx * sizeof(char));
+
+    // Allocate memory for the output image on device
+    err = cudaMalloc((void **)&d_out, outPx * sizeof(char));
+    if (err != cudaSuccess)
+    {
+        printf("Error allocating memory for the output image on device: %s", cudaGetErrorString(err));
+        cudaFree(d_start);
+        return -1;
+    }
 
     if (verbose)
         printf("Image loaded\n"
-               "Image width: %d px\n"
+               "Image width: %zd px\n"
                "Image height: %d px\n"
                "Image size: %d bytes\n"
-               "Output width: %d px\n"
-               "Output height: %d px\n"
-               "Output size: %d bytes\n\n",
+               "Output width: %zd px\n"
+               "Output height: %zd px\n"
+               "Output size: %zd bytes\n\n",
                widthImgIn, img->height, img->height * img->width * 3, widthImgOut, heightImgOut, outPx);
 
+    // Sets the maximum possible number of threads per block
     int widthTile = ((int)sqrt(prop.maxThreadsPerBlock) - (maskDim - 1));
     int heightTile = widthTile;
+
+    // Finds the best tiling
     setTiling(widthImgOut, heightImgOut, &widthTile, &heightTile);
     if ((widthTile * heightTile != 1) && !forceGlobal)
     // TRUE: Tiling approach doable
@@ -254,14 +306,18 @@ int main(int argc, char **argv)
         if(usedBlocks.x > prop.maxGridSize[0] || usedBlocks.y > prop.maxGridSize[1] || usedBlocks.z > prop.maxGridSize[2])
         {
             printf("\nError: Blocks overflow\n");
+            cudaFree(d_start);
+            cudaFree(d_out);
             return -1;
         }
         
         // Bytes of shared memory per block
-        int sharedMemSize = (widthTile + maskDim - 1) * (heightTile + maskDim - 1) * sizeof(char);
+        size_t sharedMemSize = (widthTile + maskDim - 1) * (heightTile + maskDim - 1) * sizeof(char);
         if (sharedMemSize > prop.sharedMemPerBlock)
         {
             printf("\nError: Shared memory overflow\n");
+            cudaFree(d_start);
+            cudaFree(d_out);
             return -1;
         }
 
@@ -269,13 +325,13 @@ int main(int argc, char **argv)
             printf("Tiling approach executing...\n"
                    "Threads per block: %d, %d, %d\n"
                    "Blocks: %d, %d, %d\n"
-                   "Shared memory size: %d bytes\n"
+                   "Shared memory size: %zd bytes\n"
                    "Launching kernel...\n"
                    "Parameters:\n"
-                   "ImgIn width: %d px\n"
-                   "ImgIn height: %d px\n"
-                   "ImgOut width: %d px\n"
-                   "ImgOut height: %d px\n"
+                   "ImgIn width: %zd px\n"
+                   "ImgIn height: %zd px\n"
+                   "ImgOut width: %zd px\n"
+                   "ImgOut height: %zd px\n"
                    "Tile width: %d px\n"
                    "Tile height: %d px\n"
                    "Mask dimension: %d px\n"
@@ -296,6 +352,8 @@ int main(int argc, char **argv)
         if (usedBlocks.x > prop.maxGridSize[0])
         {
             printf("\nError: Blocks overflow\n");
+            cudaFree(d_start);
+            cudaFree(d_out);
             return -1;
         }
 
@@ -305,10 +363,10 @@ int main(int argc, char **argv)
                    "Blocks: %d\n"
                    "Launching kernel...\n"
                    "Parameters:\n"
-                   "ImgIn width: %d px\n"
-                   "ImgIn height: %d px\n"
-                   "ImgOut width: %d px\n"
-                   "ImgOut height: %d px\n"
+                   "ImgIn width: %zd px\n"
+                   "ImgIn height: %zd px\n"
+                   "ImgOut width: %zd px\n"
+                   "ImgOut height: %zd px\n"
                    "Mask dimension: %d px\n"
                    "offsetCutX: %d px\n"
                    "offsetCutY: %d px\n"
@@ -318,18 +376,27 @@ int main(int argc, char **argv)
         globalCudaUpscaling<<<usedBlocks, usedThreads>>>(d_start, d_out, widthImgIn, heightImgIn, widthImgOut, heightImgOut, maskDim, (pointX - (maskDim / 2 / zoomLevel)), (pointY - (maskDim / 2 / zoomLevel)), zoomLevel);
     }
     cudaDeviceSynchronize();
-
+    
     // Check for errors
     err = cudaGetLastError();
     if (err != cudaSuccess)
     {
-        printf("%s\n", cudaGetErrorString(err));
+        printf("Error during GPU computation: %s\n", cudaGetErrorString(err));
+        cudaFree(d_start);
+        cudaFree(d_out);
         return -1;
     }
 
     // Copy result back to host
     RGBImage *out = createPPM(widthImgOut, heightImgOut);
-    cudaMemcpy(out->data, d_out, outPx * sizeof(char), cudaMemcpyDeviceToHost);
+    err = cudaMemcpy(out->data, d_out, outPx * sizeof(char), cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess)
+    {
+        printf("Error during output memory copy: %s\n", cudaGetErrorString(err));
+        cudaFree(d_start);
+        cudaFree(d_out);
+        return -1;
+    }
 
     cudaFree(d_start);
     cudaFree(d_out);

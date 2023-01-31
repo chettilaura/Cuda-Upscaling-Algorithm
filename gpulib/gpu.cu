@@ -1,7 +1,24 @@
 #include "gpu.cuh"
 #include <cmath>
 
-__global__ void tilingCudaUpscaling(const unsigned char *input, unsigned char *output, const int inWidth, const int inHeight, const int outWidth, const int outHeight, const int tileWidth, const int tileHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing)
+/*
+ * @brief Every thread loads a byte of the input image into shared memory and if it is a thread assigned to the output image computes the convolution with the mask.
+ *         The result is stored in the output image.
+ * @param [in] input: input image (full)
+ * @param [out] output: output image
+ * @param [in] inWidth: input image width
+ * @param [in] inHeight: input image height
+ * @param [in] outWidth: output image width
+ * @param [in] outHeight: output image height
+ * @param [in] tileWidth: width of the tile
+ * @param [in] tileHeight: height of the tile
+ * @param [in] maskLength: length of the mask
+ * @param [in] offsetCutX: offset of the cutout in the x direction
+ * @param [in] offsetCutY: offset of the cutout in the y direction
+ * @param [in] stuffing: stuffing factor
+ *
+*/
+__global__ void tilingCudaUpscaling(const unsigned char *input, unsigned char *output, const size_t inWidth, const size_t inHeight, const size_t outWidth, const size_t outHeight, const int tileWidth, const int tileHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing)
 {
     // Alloccate shared memory
     extern __shared__ unsigned char in_img_shared[];
@@ -35,8 +52,21 @@ __global__ void tilingCudaUpscaling(const unsigned char *input, unsigned char *o
     }
 }
 
-
-__global__ void globalCudaUpscaling(const unsigned char *input, unsigned char *output, const int inWidth, const int inHeight, const int outWidth, const int outHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing)
+/*
+ * @brief Every thread if it is assigned to the output image computes the convolution with the mask.
+ * @param [in] input: input image (full)
+ * @param [out] output: output image
+ * @param [in] inWidth: input image width
+ * @param [in] inHeight: input image height
+ * @param [in] outWidth: output image width
+ * @param [in] outHeight: output image height
+ * @param [in] maskLength: length of the mask
+ * @param [in] offsetCutX: offset of the cutout in the x direction
+ * @param [in] offsetCutY: offset of the cutout in the y direction
+ * @param [in] stuffing: stuffing factor
+ *
+*/
+__global__ void globalCudaUpscaling(const unsigned char *input, unsigned char *output, const size_t inWidth, const size_t inHeight, const size_t outWidth, const size_t outHeight, const int maskLength, const int offsetCutX, const int offsetCutY, const int stuffing)
 {    
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= outWidth * outHeight * 3)
@@ -63,7 +93,12 @@ __global__ void globalCudaUpscaling(const unsigned char *input, unsigned char *o
     __syncthreads();
 }
 
-
+/*
+ * @brief Copies the kernel to the device's constant memory
+ * @param [in] kernel: kernel to be loaded
+ * @param [in] dimKernel: dimension of the kernel
+ *
+*/
 void loadKernel(const float *kernel, const int dimKernel)
 {
     cudaMemcpyToSymbol(d_kernel, kernel, dimKernel * dimKernel * sizeof(float));
@@ -72,6 +107,17 @@ void loadKernel(const float *kernel, const int dimKernel)
 
 /* DEPRECATED FUNCTIONS */
 
+/*
+* @brief Saves to output the cutout of the image img starting from the point (stpntY, stpntX) with dimension (dimCutX, dimCutY)
+* @param [in] img: input image (full)
+* @param [out] cutout: output image (cutout)
+* @param [in] stpntY: starting point in the y direction
+* @param [in] stpntX: starting point in the x direction
+* @param [in] width: width of the image
+* @param [in] dimCutX: dimension of the cutout in the x direction
+* @param [in] dimCutY: dimension of the cutout in the y direction
+*
+*/
 __global__ void getCutout(char *img, char *cutout, int stpntY, int stpntX, int width, int dimCutX, int dimCutY)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -84,6 +130,20 @@ __global__ void getCutout(char *img, char *cutout, int stpntY, int stpntX, int w
     __syncthreads();
 }
 
+/*
+* @brief Does cutout and scaling in one step
+* @param [in] input: input image (full)
+* @param [out] output: output image (scaled)
+* @param [in] dimImgIn: dimension of the input image
+* @param [in] dimImgMid: dimension of the intermediate image
+* @param [in] dimImgW: dimension of the image in the width direction
+* @param [in] dimImgOut: dimension of the output image
+* @param [in] offsetCut: offset of the cutout
+* @param [in] offsetScaled: offset of the scaled image
+* @param [in] stuffing: stuffing factor
+* @param [in] limit: limit of the loop
+*
+*/
 __global__ void scaleImage(const char *input, char *output, const int dimImgIn, const int dimImgMid, const int dimImgW, const int dimImgOut, const int offsetCut, const int offsetScaled, const int stuffing, const int limit)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -99,6 +159,16 @@ __global__ void scaleImage(const char *input, char *output, const int dimImgIn, 
     output[position] = value;
 }
 
+/*
+* @brief Scales the image from the cutout
+* @param [in] cutout: input image (cutout)
+* @param [out] scaled: output image (scaled)
+* @param [in] dimImgIn: dimension of the input image
+* @param [in] dimImgMid: dimension of the intermediate image
+* @param [in] dimImgOut: dimension of the output image
+* @param [in] offset: offset of the scaled image
+*
+*/
 __global__ void scaleGPU(const char *cutout, char *scaled, const int dimImgIn, const int dimImgMid, const int dimImgOut, const int offset)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -115,6 +185,15 @@ __global__ void scaleGPU(const char *cutout, char *scaled, const int dimImgIn, c
     scaled[position] = value;
 }
 
+/*
+* @brief Does the global memory convolution of the image with the kernel starting from the scaled image
+* @param [in] input: input image (scaled)
+* @param [out] output: output image
+* @param [in] dimImgIn: dimension of the input image
+* @param [in] dimImgOut: dimension of the output image
+* @param [in] dimKernel: dimension of the kernel
+*
+*/
 __global__ void basicConvGPU(const char *input, char *output, const int dimImgIn, const int dimImgOut, const int dimKernel)
 {
     const int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -138,6 +217,17 @@ __global__ void basicConvGPU(const char *input, char *output, const int dimImgIn
     output[idx] = (unsigned char)sum;
 }
 
+/*
+* @brief Does the shared memory convolution of the image with the kernel starting from the scaled image
+* @param [in] input: input image (scaled)
+* @param [out] output: output image
+* @param [in] dimImgIn: dimension of the input image
+* @param [in] dimImgOut: dimension of the output image
+* @param [in] dimKernel: dimension of the kernel
+* @param [in] dimTileIn: dimension of the smaller tile
+* @param [in] dimTileOut: dimension of the outwards tile
+*
+*/
 __global__ void convGPU(const char *input, char *output, const int dimImgIn, const int dimImgOut, const int dimKernel, const int dimTileIn, const int dimTileOut)
 {
     // Alloccate shared memory

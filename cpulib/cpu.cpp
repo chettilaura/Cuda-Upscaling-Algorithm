@@ -2,6 +2,12 @@
 #include <cmath>
 
 
+/*
+* @brief This function is used to compute the gaussian kernel on the CPU
+* @param [in] gaussLength: the length of the kernel
+* @param [in] gaussSigma: the sigma of the kernel
+* @param [out] kernel: the kernel to be computed
+*/
 void gaussianKernelCPU(const int gaussLength, const float gaussSigma, float *kernel)
 {
     float sum = 0;
@@ -22,6 +28,13 @@ void gaussianKernelCPU(const int gaussLength, const float gaussSigma, float *ker
     }
 }
 
+/*
+* @brief Sets the dimensions of the tiles for the tiling of the image
+* @param [in] width: the width of the image
+* @param [in] height: the height of the image
+* @param [out] dimTilesX: the number of tiles in the x direction
+* @param [out] dimTilesY: the number of tiles in the y direction
+*/
 void setTiling(const int width, const int height, int *dimTilesX, int *dimTilesY)
 {
     const int back = *dimTilesY * 2;
@@ -36,6 +49,14 @@ void setTiling(const int width, const int height, int *dimTilesX, int *dimTilesY
 
 /* DEPRECATED FUNCTIONS */
 
+/*
+* @brief This function is used to compute the convolution on the CPU
+* @param [in] input: the input image (scaled)
+* @param [in] kernel: the kernel to be used
+* @param [out] output: the output image
+* @param [in] width: the width of the image
+* @param [in] heigth: the height of the image
+*/
 void convCPU(char *input, char *output, char *kernel, const int width, const int heigth)
 {
     const int DIMKERNEL = 3; // Constant previously defined in stdCu.h
@@ -56,6 +77,17 @@ void convCPU(char *input, char *output, char *kernel, const int width, const int
     }
 }
 
+/*
+* @brief Zoomes the image repeating bytes from the original image
+* @param [in] img: the input image (full)
+* @param [out] zoomed_out: the output image
+* @param [in] dimZoomX: the width of the zoomed image
+* @param [in] dimZoomY: the height of the zoomed image
+* @param [in] x: the x coordinate of the upper left corner of the zoomed image
+* @param [in] y: the y coordinate of the upper left corner of the zoomed image
+* @param [in] width: the width of the image
+* @param [in] height: the height of the image
+*/
 void zero_order_zoomingCPU(unsigned char *img, unsigned char *zoomed_out, int dimZoomX, int dimZoomY, int x, int y, int width, int height, int outDim)
 {
 

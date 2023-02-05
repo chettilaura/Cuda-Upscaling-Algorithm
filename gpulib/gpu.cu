@@ -1,7 +1,7 @@
 #include "gpu.cuh"
 #include <cmath>
 
-/*
+/**
  * @brief Every thread loads a byte of the input image into shared memory and if it is a thread assigned to the output image computes the convolution with the mask.
  *         The result is stored in the output image.
  * @param [in] input: input image (full)
@@ -52,7 +52,7 @@ __global__ void tilingCudaUpscaling(const unsigned char *input, unsigned char *o
     }
 }
 
-/*
+/**
  * @brief Every thread if it is assigned to the output image computes the convolution with the mask.
  * @param [in] input: input image (full)
  * @param [out] output: output image
@@ -93,7 +93,7 @@ __global__ void globalCudaUpscaling(const unsigned char *input, unsigned char *o
     __syncthreads();
 }
 
-/*
+/**
  * @brief Copies the kernel to the device's constant memory
  * @param [in] kernel: kernel to be loaded
  * @param [in] dimKernel: dimension of the kernel
@@ -107,7 +107,7 @@ void loadKernel(const float *kernel, const int dimKernel)
 
 /* DEPRECATED FUNCTIONS */
 
-/*
+/**
 * @brief Saves to output the cutout of the image img starting from the point (stpntY, stpntX) with dimension (dimCutX, dimCutY)
 * @param [in] img: input image (full)
 * @param [out] cutout: output image (cutout)
@@ -130,7 +130,7 @@ __global__ void getCutout(char *img, char *cutout, int stpntY, int stpntX, int w
     __syncthreads();
 }
 
-/*
+/**
 * @brief Does cutout and scaling in one step
 * @param [in] input: input image (full)
 * @param [out] output: output image (scaled)
@@ -159,7 +159,7 @@ __global__ void scaleImage(const char *input, char *output, const int dimImgIn, 
     output[position] = value;
 }
 
-/*
+/**
 * @brief Scales the image from the cutout
 * @param [in] cutout: input image (cutout)
 * @param [out] scaled: output image (scaled)
@@ -185,7 +185,7 @@ __global__ void scaleGPU(const char *cutout, char *scaled, const int dimImgIn, c
     scaled[position] = value;
 }
 
-/*
+/**
 * @brief Does the global memory convolution of the image with the kernel starting from the scaled image
 * @param [in] input: input image (scaled)
 * @param [out] output: output image
@@ -217,7 +217,7 @@ __global__ void basicConvGPU(const char *input, char *output, const int dimImgIn
     output[idx] = (unsigned char)sum;
 }
 
-/*
+/**
 * @brief Does the shared memory convolution of the image with the kernel starting from the scaled image
 * @param [in] input: input image (scaled)
 * @param [out] output: output image

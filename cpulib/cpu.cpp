@@ -2,7 +2,7 @@
 #include <cmath>
 
 
-/*
+/**
 * @brief This function is used to compute the gaussian kernel on the CPU
 * @param [in] gaussLength: the length of the kernel
 * @param [in] gaussSigma: the sigma of the kernel
@@ -28,7 +28,7 @@ void gaussianKernelCPU(const int gaussLength, const float gaussSigma, float *ker
     }
 }
 
-/*
+/**
 * @brief Sets the dimensions of the tiles for the tiling of the image
 * @param [in] width: the width of the image
 * @param [in] height: the height of the image
@@ -49,7 +49,7 @@ void setTiling(const int width, const int height, int *dimTilesX, int *dimTilesY
 
 /* DEPRECATED FUNCTIONS */
 
-/*
+/**
 * @brief This function is used to compute the convolution on the CPU
 * @param [in] input: the input image (scaled)
 * @param [in] kernel: the kernel to be used
@@ -77,7 +77,7 @@ void convCPU(char *input, char *output, char *kernel, const int width, const int
     }
 }
 
-/*
+/**
 * @brief Zoomes the image repeating bytes from the original image
 * @param [in] img: the input image (full)
 * @param [out] zoomed_out: the output image

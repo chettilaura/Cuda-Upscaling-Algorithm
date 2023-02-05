@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cooperative_groups.h>
 #include "../standlib/stdCu.h"
 
 #define MAX_KERNEL_LENGTH 16129

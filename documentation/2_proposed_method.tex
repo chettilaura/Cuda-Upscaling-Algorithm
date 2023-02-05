@@ -1,39 +1,60 @@
 \section{Proposed Method}
 
-In this section we will give to the lecturer a detailed description of the proposed algorithm: some of the implemented procedures will be explained through pseudo-code. 
+In this section we will give to the lecturer a detailed description of the proposed algorithm: 
+some implemented procedures will be explained through pseudocode. 
 The algorithm works in successive stages as described in the following:
 
 \begin{itemize}
+    \item Kernel loading
     \item Image reading
     \item Image cut out
     \item Image enlargement and filling
     \item Image enhancement
 \end{itemize}
 
+    \subsection{Kernel Loading}
+    The algorithm can choose between custom kernels given as input from files, or gaussian ones, which are generated on the fly,
+    taking as input the length of the kernel and the $\Sigma$ value. Once generation is done, the kernel is loaded into 
+    the constant memory of the GPU.\\ % Add motivations and performance improvements to why this is done
+
     \subsection{Image Cut-Out}
-    The aim of this step is to select the part of the original image that has to be trimmed: the dimension of the cut area is passed through command line and the script subsequently calculates the dimension of image in output.  \\ 
-    The measure of the side of the final image is computed choosing the largest multiple smaller than the smallest dimension between width and height of the original image.\\
-    %controlli per verificare che ritaglio non esca
-    The function version for the cpu is implemented as “zero order zooming” whereas the gpu version is implemented as “get cut out”: both of them carry out the same logic explained down below:
+    The aim of this step is to select the part of the original image that has to be trimmed: 
+    the dimension of the cut area is passed through command line and the script subsequently calculates the dimension of image in output.  \\ 
+    The measure of the side of the final image is computed choosing the largest multiple, 
+    smaller than the smallest dimension between width and height of the original image. These checks are performed in order to avoid the creation of a final 
+    image with a dimension that is not a multiple of the side of the cut area.\\
+    The function carries out the logic explained down below:
 
     \begin{equation}
-        img_out[tid] = img[starting_byte + row_offset + column_offset]
+        img_out[tid] = img[starting\_byte + row\_offset + column\_offset]
     \end{equation}
+    
+    where $tid$ is the thread id, $img\_out$ is the final image, $img$ is the original image, $starting\_byte$ is the starting byte of the cut area, 
+    $row\_offset$ is the offset of the row of the pixel to be copied and $column\_offset$ is the offset of the column of the pixel to be copied.
+    The implementation is basic, it is a simple copy of the pixels from the original image to the final one, done in parallel using CUDA threads.\\
 
     \subsection{Image Enlargement and Filling}
-    % //si capisce di quanto si deve zoomare confrontando dim ritaglio con (il multiplo più grande di dim ritaglio che stia all’interno di dim minore x dim minore) -> si capisce il fattore di ripetizione dei pixels 3 
-    % //si creano tanti threads quanti byte dell’immagine finale e ognuno si calcola il valore dall’immagine ritagliata -> si ripete byte in verticale e orizzontale tante volte quanto necessario -> filling the holes 
+    This step is the one that enlarges the image and fills the holes that are created by the zooming process.
+    The process begins by creating as many threads as are the bytes in the final image, and each one of them computes 
+    the value of the pixel to be copied from the original image, so that all holes are filled.\\
+    The holes are filled with the help of the pixel replication algorithm. 
+    It replicates the neighboring pixels in order to increase them to enlarge the image: it creates new pixels from the already given ones, 
+    and it is the most basic technique of implementing the zooming technique, giving as output an image blurred and with lots of artifacts.\\ 
+    In the first version of the algorithm, while filling the canvas with the enlarged image, a black border is left around the image,
+    which will be used to perform the convolution with the filter, which needs a larger image than the one that is actually returned as output, whichever
+    the position from which to start the zooming from.
+    The final version of the algorithm, instead, performs the enlargement, and if the cutout is not at the border, the program will use neighboring pixels
+    to create a slightly bigger image for the convolution. If the cutout is at the border, instead, the back border will be used just for the border part, 
+    leaving a small, unnoticeable shade at the last pixels of the image. This final version allows to have an image which is even more faithful to the original one.\\
 
-    % //ripeti operazione di copia di un determinato pixel dall’immagine originale all’immagine finale tante volte quanto è il rapporto tra la dim dell’immagine finale e quella iniziale. 
-    % //calcoliamo separatamente l’indice che indica quale pixel copiare più volte e l’indice che indica dove andare a incollare più volte quel pixel. 
-    % //il singolo pixel diventa un quadrato di stuffing*stuffing pixels (in byte è stuffing*stuffing*3)
+    % \begin{equation}
+    %     \begin{split}
+    %         img\_out &[start\_edge\_coord + r\_dim\_lrgst\_img + c\_dim\_lrgst\_img + col\_offset ] =\\
+    %             &= img[r\_offset\_smlr\_img + c\_offset\_smlr\_img + col\_offset\_img]
+    %     \end{split}
+    % \end{equation}
 
-    % //achtung: nel riempire la canvas dell’immagine scalata si lascia un bordo nero che servirà per parasi il fat ass nella convoluzione 
 
-    The function version for the cpu is implemented as “zero order zooming” whereas the gpu version is implemented as “scale GPU”: both of them carry out the same logic explained down below
-    \begin{equation}
-        img_out [coordinate_inizio_bordo + row_dim_largest_img + column_dim_largest_img + color_offset ] = img [row_offset_smaller_img + column_offset_smaller_img + color_offset_img]
-    \end{equation}
 
     \subsection{Image Enhancement}
     % versione1 GPU -> basicConvGpu (usata come fallback)

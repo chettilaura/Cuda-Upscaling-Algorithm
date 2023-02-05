@@ -1,11 +1,11 @@
 \babel@toc {english}{}\relax 
-\contentsline {section}{\numberline {1}Introduction}{2}{section.1}%
-\contentsline {section}{\numberline {2}Related works}{2}{section.2}%
-\contentsline {subsection}{\numberline {2.1}The Pixel Replication Algorithm}{2}{subsection.2.1}%
-\contentsline {subsection}{\numberline {2.2}Image Filtering Convolution Algorithm}{2}{subsection.2.2}%
-\contentsline {section}{\numberline {3}Proposed Method}{3}{section.3}%
-\contentsline {subsection}{\numberline {3.1}Image Cut-Out}{3}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}Image Enlargement and Filling}{3}{subsection.3.2}%
-\contentsline {subsection}{\numberline {3.3}Image Enhancement}{3}{subsection.3.3}%
-\contentsline {section}{\numberline {4}Experimental Results}{4}{section.4}%
-\contentsline {section}{\numberline {5}Conclusions}{5}{section.5}%
+\contentsline {section}{\numberline {1}Related works}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}The Pixel Replication Algorithm}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Image Filtering Convolution Algorithm}{3}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Proposed Method}{4}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Kernel Loading}{4}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Image Cut-Out}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Image Enlargement and Filling}{4}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Image Enhancement}{5}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Experimental Results}{6}{section.3}%
+\contentsline {section}{\numberline {4}Conclusions}{7}{section.4}%

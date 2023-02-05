@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.3) (preloaded format=pdflatex 2022.5.24)  26 JAN 2023 13:19
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.3) (preloaded format=pdflatex 2022.5.24)  5 FEB 2023 19:32
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -8,8 +8,8 @@ entering extended mode
 LaTeX2e <2021-11-15> patch level 1
 L3 programming layer <2022-05-04> (C:\Users\nicol\AppData\Local\Programs\MiKTeX\tex/latex/base\article.cls
 Document Class: article 2021/10/04 v1.4n Standard LaTeX document class
-(C:\Users\nicol\AppData\Local\Programs\MiKTeX\tex/latex/base\size10.clo
-File: size10.clo 2021/10/04 v1.4n Standard LaTeX file (size option)
+(C:\Users\nicol\AppData\Local\Programs\MiKTeX\tex/latex/base\size12.clo
+File: size12.clo 2021/10/04 v1.4n Standard LaTeX file (size option)
 )
 \c@part=\count185
 \c@section=\count186
@@ -476,12 +476,12 @@ File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 * \topmargin=-37.0pt
 * \headheight=12.0pt
 * \headsep=25.0pt
-* \topskip=10.0pt
+* \topskip=12.0pt
 * \footskip=30.0pt
-* \marginparwidth=65.0pt
-* \marginparsep=11.0pt
+* \marginparwidth=44.0pt
+* \marginparsep=10.0pt
 * \columnsep=10.0pt
-* \skip\footins=9.0pt plus 4.0pt minus 2.0pt
+* \skip\footins=10.8pt plus 4.0pt minus 2.0pt
 * \hoffset=0.0pt
 * \voffset=0.0pt
 * \mag=1000
@@ -528,29 +528,39 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has b
 <to be read again> 
                    \relax 
 l.58 \clearpage
-                [1] (1_introduction.tex) [2
+                [1] (0_abstract.tex) [2
 
-] (2_proposed_method.tex
-Overfull \hbox (265.67053pt too wide) detected at line 36
-[][]\OML/cmm/m/it/10 img[]ut\OT1/cmr/m/n/10 [\OML/cmm/m/it/10 coordinate[]nizio[]ordo \OT1/cmr/m/n/10 + \OML/cmm/m/it/10 row[]im[]argest[]mg \OT1/cmr/m/n/10 + \OML/cmm/m/it/10 column[]im[]argest[]mg \OT1/cmr/m/n/10 + \OML/cmm/m/it/10 color[]ffset\OT1/cmr/m/n/10 ] = \OML/cmm/m/it/10 img\OT1/cmr/m/n/10 [\OML/cmm/m/it/10 row[]ffset[]maller[]mg \OT1/cmr/m/n/10 + \OML/cmm/m/it/10 column[]ffset[]maller[]mg \OT1/cmr/m/n/10 + \OML/cmm/m/it/10 color[]ffset[]mg\OT1/cmr/m/n/10 ]
+] (1_related_works.tex) [3] (2_proposed_method.tex
+Underfull \hbox (badness 10000) in paragraph at lines 16--19
+
  []
 
-) [3] (3_experimental_results.tex) [4] (4_conclusions.tex) [5] (main.aux)
+
+Underfull \hbox (badness 10000) in paragraph at lines 32--35
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 37--49
+
+ []
+
+[4]) [5] (3_experimental_results.tex) [6] (4_conclusions.tex) [7] (main.aux)
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 4A152F9777D40DE3528C824EFC87726A;1533.
+(rerunfilecheck)             Checksum: 6B6E017EE046C44BD10B1C6878468DA4;1560.
  ) 
 Here is how much of TeX's memory you used:
- 14501 strings out of 478614
- 235287 string characters out of 2843122
- 554219 words of memory out of 3000000
- 32445 multiletter control sequences out of 15000+600000
- 472471 words of font info for 39 fonts, out of 8000000 for 9000
+ 14524 strings out of 478614
+ 235634 string characters out of 2843122
+ 558236 words of memory out of 3000000
+ 32457 multiletter control sequences out of 15000+600000
+ 475429 words of font info for 49 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  60i,7n,63p,409b,368s stack positions out of 10000i,1000n,20000p,200000b,80000s
- <C:\Users\nicol\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1000.pk><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb>
-Output written on main.pdf (6 pages, 414263 bytes).
+ <C:\Users\nicol\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1200.pk><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb>
+Output written on main.pdf (8 pages, 389586 bytes).
 PDF statistics:
- 131 PDF objects out of 1000 (max. 8388607)
- 19 named destinations out of 1000 (max. 500000)
+ 130 PDF objects out of 1000 (max. 8388607)
+ 20 named destinations out of 1000 (max. 500000)
  86 words of extra memory for PDF output out of 10000 (max. 10000000)
 

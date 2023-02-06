@@ -35,7 +35,7 @@ The algorithm works in successive stages as described in the following:
 
     \subsection{Image Enlargement and Filling}
     This step is the one that enlarges the image and fills the holes that are created by the zooming process.
-    The process begins by creating as many threads as are the bytes in the final image, and each one of them computes 
+    The process begins by creating as many threads as the bytes in the final image, and each one of them computes 
     the value of the pixel to be copied from the original image, so that all holes are filled.\\
     The holes are filled with the help of the pixel replication algorithm. 
     It replicates the neighboring pixels in order to increase them to enlarge the image: it creates new pixels from the already given ones, 
@@ -57,20 +57,21 @@ The algorithm works in successive stages as described in the following:
 
 
     \subsection{Image Enhancement}
-    % versione1 GPU -> basicConvGpu (usata come fallback)
-    % versione2 GPU -> ConvGpu (tiling)
-    % {versione3 GPU -> ConvGpu (tiling + conflitti banchi shared)}
 
-    % classica convoluzione da memoria globale prende dati necessari, la maschera sta nella constant memory 
+    This step is based on the convolution operation which is characterized by the type of the odd-length kernel mask used and the memory management configuration set in order to divide the main image into smaller pieces by which divide the work load.   
+    
+    %[sottosezione sulle masks] 
+    The gaussian kernel mask is one of the two options available in the project and it’s generated on CPU accordingly to the “Gaussuan Kernel Cpu” function: it receives the length and the sigma of the kernel and it calculates the mask based on the below given Gaussian Distribution. 
+        %mettere qui foto distribuzione gaussiana 
+    The GaussLength parameter must be an odd value from 3 to 127 sides included and the GaussSigma parameter must be a value from 0.5 onwards side included.
+    It is also possible to utilize a custom kernel passed through the command line which has to be specified element by element and it has to be at maximum “MAX_KERNEL_DIM”  long: set to 127 elements.
+    The chosen mask is stored in the “d_kernel” parameter allocated in the constant memory: having the mask in the constant memory allows us to save time because it is a special type of global memory with a peculiar cache that doesn’t need to do as many coherency tests as the other caches.
 
-    % versione tiling: difficoltà gestione dei 3 colori -> abbiamo gestito i colori singolarmente per blocco: i threads di ogni blocco lavorano su uno stesso colore.
-    % L’immagine è stata frammentata per lavorare su più parti in parallelo, ogni frammento di immagine espresso in pixel (tile) è elaborato a gruppi di tre blocks: uno per ogni colore  
-    % la chiamata kernel specifica la dimensione della shared memory: una per ogni blocco. 
-    % nel kernel TUTTI i threads del blocco partecipano a riempire la shared memory e poi solo alcuni di essi partecipano a calcolare la convoluzione con la maschera per quel blocco.
-    % Il numero dei threads per blocco è pari al numero dei bytes della shared memory (bigTileDim*bigTileDim)
-    % il riempimento della shared memory è fatto byte per byte e non pixel x pixel quindi gli offset di riempimento devono tenere conto di questo 
-    % la convoluzione è fatta tra il singolo canale-colore del pixel e la maschera 
-    % come indici dei threads usiamo threadId.x & threadId.y perchè così ci aiutano ad avere degli indici sensati per  spostarci logicamente nella matrice sia per il riempimento della shared memory che per la convoluzione (ma in realtà avremmo potuto usare una sola dimensione per gli indici dei threads)
-    % con il termine ti tiling ci riferiamo all’utilizzo della shared memory per assegnazione ai blocchi del materiale su cui lavorare. 
+    %[sottosezione sul memory management] 
+    The convolution operation can be implemented using exclusively the global memory  but in some cases, checked in the main file, it can be optimized by exploiting the shared memory through the tiling process.
+    The global memory convolution version is implemented in the “globalCudaUpscaling” function and the shared memory one, when available, is performed in the “tilingCudaUpscaling” function: it is also possible to force the global memory version through the boolean variable “forceGlobal” that can be set to one in the main call. 
+        %spiegazione tiling nel dettaglio
+
+
 
 

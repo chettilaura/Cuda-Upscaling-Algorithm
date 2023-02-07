@@ -12,6 +12,20 @@ The algorithm works in successive stages as described in the following:
     \item Image enhancement
 \end{itemize}
 
+The algorithm is implemented in C++ and CUDA, and it is divided into two main parts: the first one is the CPU part, which is responsible for the reading of the image
+and the kernel loading; the second one is the GPU part, which is responsible for the image cut out, enlargement and filling, and the image enhancement.
+The inputs required by the application are based on the commands given by the user through the command line, and they are the following:
+\begin{itemize}
+    \item The path of the image to be zoomed;
+    \item The $-c$ flag, which chooses a custom kernel, followed by the file path of the kernel;
+    \item The $-g$ flag, which chooses a gaussian kernel, followed by the length of the kernel and the $\Sigma$ value, mutually exclusive with the previous;
+    \item An optional $-v$ flag, which enables the verbose mode;
+    \item An optional $-f$ flag, which forces the use of global memory instead of the shared;
+    \item The coordinated of the cut out area, in the form of $x,y$;
+    \item The width and the height of the cut out area;
+    \item The zoom level of the image, which must be an integer bigger than 0.
+\end{itemize}
+
     \subsection{Kernel Loading}
     The algorithm can choose between custom kernels given as input from files, or gaussian ones, which are generated on the fly,
     taking as input the length of the kernel and the $\Sigma$ value. Once generation is done, the kernel is loaded into 
@@ -62,25 +76,25 @@ The algorithm works in successive stages as described in the following:
     and the memory management configuration set in order to divide the main image into smaller pieces by which divide the work load.   
     
     %[sottosezione sulle masks] 
-    The gaussian kernel mask is one of the two options available in the project and it’s generated on CPU accordingly to the “Gaussuan Kernel Cpu” function: 
-    it receives the length and the sigma of the kernel and it calculates the mask based on the below given Gaussian Distribution. 
+    The Gaussian kernel mask is one of the two options available in the project, generated on CPU according to the \textit{Gaussian\_Kernel\_Cpu} function: 
+    it receives the length and the sigma of the kernel and calculates the mask based on the below given Gaussian Distribution. 
         %mettere qui foto distribuzione gaussiana 
-    The GaussLength parameter must be an odd value from 3 to 127 sides included and the GaussSigma parameter must be a value from 0.5 onwards side included.
+    The \textit{GaussLength} parameter must be an odd value from 3 to 127 sides included and the GaussSigma parameter must be a value from 0.5 onwards side included.
     It is also possible to utilize a custom kernel passed through the command line which has to be specified element by element 
-    and it has to be at maximum “MAX_KERNEL_DIM”  long: it is set to 127 elements.
-    The chosen mask is stored in the “d_kernel” parameter allocated in the constant memory: having the mask in the constant memory allows us to save time 
+    and it has to be at maximum \textit{MAX\_KERNEL\_DIM}  long: it is set to 127 elements.
+    The chosen mask is stored in the \textit{d\_kernel} parameter allocated in the constant memory: having the mask in the constant memory allows us to save time 
     because it is a special type of global memory with a peculiar cache that doesn’t need to do as many coherency tests as the other caches.
 
-    %[sottosezione sul memory management] 
+    %[sottosezione sul memory management]  
     The convolution operation can be implemented using exclusively the global memory but in some cases, checked in the main file, it can be optimized by exploiting the shared memory through the tiling process.
-    The global memory convolution version is implemented in the “globalCudaUpscaling” function and the shared memory one, when available, is performed in the “tilingCudaUpscaling” function: 
-    it is also possible to force the global memory version through the boolean variable “forceGlobal” that can be set in the main call. 
+    The global memory convolution version is implemented in the \textit{globalCudaUpscaling} function and the shared memory one, when available, is performed in the \textit{tilingCudaUpscaling} function: 
+    it is also possible to force the global memory version through the boolean variable \textit{forceGlobal} that can be set in the main call. 
     The image is fragmented in order to work on its multiple sections in parallel where each image-fragment is processed in groups of three blocks: one for each color.
     Every block of threads only works on a specific color channel and the convolution is performed between the individual color channel of the single pixel and the mask. 
     Within the GPU kernel call it has to specified the shared memory allocation dimension: there must be a specific shared memory chunk for every block of threads.  
     The shared memory has to be first filled with the color information of the image and than it can be used to perform the convolution between the informations stored and the mask: 
     all the threads of the block participate in filling the memory but afterwards only some of them participate in calculating the convolution with the mask for that block.
-    The number of threads set for each block corresponds to the number of bytes allocated for the shared memory: in the project it is set to “bigTileDim*bigTileDim” . 
+    The number of threads set for each block corresponds to the number of bytes allocated for the shared memory: in the project it is set to $bigTileDim*bigTileDim$. 
        %mettere qui schemino disegnato su assegnazione blocchi e colori     
 
 

@@ -1,11 +1,18 @@
 \section{Conclusions}
 
-In this paper we proposed a technique for both zooming and enhancing a digital picture, in RGB colors, by exploiting the gpu parallelism. 
- 
+In this paper we proposed a technique for both zooming and enhancing a digital picture, in RGB colors, by exploiting the gpu parallelism.
+
+At first we started implementing the CPU version of the algorithm not being able to parallelize anything in the workload and then, moving on,
+we came up with a first non-optimized implementation on the GPU: at the end we succeeded in enhancing the procedure by working on its bottleneck 
+which is the memory reading for the data transfer.
+
+Concerning the employment of the shared memory for the tiling process, we were surprised by the complete absence of memory access conflicts: 
+this led us to the Nvidia developer website where we were pleased to find out that the GPUs equipped with a computer capability greater than the 2.0 version 
+are able to avoid any type of conflict of that kind. 
+
+In a future perspective, within the overall Upscaling algorithm implemented, the section concerning the zoom algorithm can certainly be optimized: 
+we utilized a basic algorithm that simply replicates the adjacent pixels but, for example, 
+it could be used another type of algorithm able to interpolate the color values instead of replicating the already existing ones.
 
 
-% siamo andati per gradi partendo da calcoli svolti completamente su Cpu per poi passare ad una prima implementazione non ottimizzata su gpu per poi perfezionare l’algoritmo per gpu lavorando sul suo collo di bottiglia: la lettura in memoria per il trasferimento di dati. 
 
-% dovendo proseguire questo progetto in un percorso di tesi si potrebbe partire da un algoritmo di zooming più articolato che non replichi semplicemente i pixel adiacenti ma che ne interpoli la colorazione 
-
-% siamo rimasti molto sorpresi dalla non presenza di conflitti nell’accesso alla shared memory: siamo dunque andati sul sito di invidia developer (link) e abbiamo scoperto che le schede grafiche con computer capability > 2.0 version evitano conflitti di  banchi .. 

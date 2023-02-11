@@ -9,32 +9,32 @@ int main(int argc, char **argv)
     if (argc == 1 || (argc == 2 && (argv[1] == std::string("-h") || argv[1] == std::string("--help"))))
     {
         printf("\n\n"
-            "CUDA Upscale\n\n"
-            "WARNING: This program is made only for educational purposes and is not intended to be used in production.\n\n"
-            "Usage:\n\n"
-            "    %s [Filtering Matrix generation's commands] inputFile.ppm cutOutCenterX cutOutCenterY cutOutWidth cutOutHeight zoomLevel [Matrix generation's parameters]\n\n"
-            "  - Filtering Matrix generation's commands\n"
-            "\t -c[v][f] --custom[v][f]: Generate a custom matrix from the file passed as an argument in the Matrix generation's parameters\n"
-            "\t -g[v][f] --gauss[v][f]: Generate a gaussian matrix\n"
-            "\t Optional: v character to allow verbose mode and print debug information\n"
-            "\t Optional: f character to force the use of the global memory\n\n"
-            "  - inputFile.ppm: A valid .ppm P6 input image\n"
-            "  - cutOutCenterX: X coordinate of the center of the selection zone\n"
-            "  - cutOutCenterY: Y coordinate of the center of the selection zone\n"
-            "  - cutOutWidth: Length of the side of the selection\n\n"
-            "  - cutOutHeight: Length of the side of the selection\n\n"
-            "  - zoomLevel: Zoom level of the output image, must be a INT value bigger than 0\n"
-            "               If 1 is inserted, only the convolution will be performed\n\n"
-            "  - Matrix generation's parameters\n"
-            "\t GaussLength: must be an odd value from 3 to 127 sides included\n"
-            "\t GaussSigma: must be a value from 0.5 onwards side included\n"
-            "\t InputKernelFile.txt: formatted as such\n\n"
-            "\t\t\tmatrixSide'sLength (must be odd)\n"
-            "\t\t\tFirstElement SecondElement ...\n"
-            "\t\t\tRowElement ...\n"
-            "\t\t\t...\n\n",
-            argv[0]);
-            return 0;
+               "CUDA Upscale\n\n"
+               "WARNING: This program is made only for educational purposes and is not intended to be used in production.\n\n"
+               "Usage:\n\n"
+               "    %s [Filtering Matrix generation's commands] inputFile.ppm cutOutCenterX cutOutCenterY cutOutWidth cutOutHeight zoomLevel [Matrix generation's parameters]\n\n"
+               "  - Filtering Matrix generation's commands\n"
+               "\t -c[v][f] --custom[v][f]: Generate a custom matrix from the file passed as an argument in the Matrix generation's parameters\n"
+               "\t -g[v][f] --gauss[v][f]: Generate a gaussian matrix\n"
+               "\t Optional: v character to allow verbose mode and print debug information\n"
+               "\t Optional: f character to force the use of the global memory\n\n"
+               "  - inputFile.ppm: A valid .ppm P6 input image\n"
+               "  - cutOutCenterX: X coordinate of the center of the selection zone\n"
+               "  - cutOutCenterY: Y coordinate of the center of the selection zone\n"
+               "  - cutOutWidth: Length of the side of the selection\n\n"
+               "  - cutOutHeight: Length of the side of the selection\n\n"
+               "  - zoomLevel: Zoom level of the output image, must be a INT value bigger than 0\n"
+               "               If 1 is inserted, only the convolution will be performed\n\n"
+               "  - Matrix generation's parameters\n"
+               "\t GaussLength: must be an odd value from 3 to 127 sides included\n"
+               "\t GaussSigma: must be a value from 0.5 onwards side included\n"
+               "\t InputKernelFile.txt: formatted as such\n\n"
+               "\t\t\tmatrixSide'sLength (must be odd)\n"
+               "\t\t\tFirstElement SecondElement ...\n"
+               "\t\t\tRowElement ...\n"
+               "\t\t\t...\n\n",
+               argv[0]);
+        return 0;
     }
 
     if (argc < 9 || argc > 10)
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
         for (int i = 0; i < maskDim; i++)
         {
             fgets(buff, 1280, kernelFile);
-            if (sscanf(buff, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f", &kernel[i * maskDim], &kernel[i * maskDim + 1], &kernel[i * maskDim + 2], &kernel[i * maskDim + 3], &kernel[i * maskDim + 4], &kernel[i * maskDim + 5], &kernel[i * maskDim + 6], &kernel[i * maskDim + 7], &kernel[i * maskDim + 8], &kernel[i * maskDim + 9], &kernel[i * maskDim + 10], &kernel[i * maskDim + 11], &kernel[i * maskDim + 12], &kernel[i * maskDim + 13], &kernel[i * maskDim + 14], &kernel[i * maskDim + 15], &kernel[i * maskDim + 16], &kernel[i * maskDim + 17], &kernel[i * maskDim + 18], &kernel[i * maskDim + 19], &kernel[i * maskDim + 20], &kernel[i * maskDim + 21], &kernel[i * maskDim + 22], &kernel[i * maskDim + 23], &kernel[i * maskDim + 24], &kernel[i * maskDim + 25], &kernel[i * maskDim + 26], &kernel[i * maskDim + 27], &kernel[i * maskDim + 28], &kernel[i * maskDim + 29], &kernel[i * maskDim + 30], &kernel[i * maskDim + 31], &kernel[i * maskDim + 32], &kernel[i * maskDim + 33], &kernel[i * maskDim + 34], &kernel[i * maskDim + 35], &kernel[i * maskDim + 36], &kernel[i * maskDim + 37], &kernel[i * maskDim + 38], &kernel[i * maskDim + 39], &kernel[i * maskDim + 40], &kernel[i * maskDim + 41], &kernel[i * maskDim + 42], &kernel[i * maskDim + 43], &kernel[i * maskDim + 44], &kernel[i * maskDim + 45], &kernel[i * maskDim + 46], &kernel[i * maskDim + 47], &kernel[i * maskDim + 48], &kernel[i * maskDim + 49], &kernel[i * maskDim + 50], &kernel[i * maskDim + 51], &kernel[i * maskDim + 52], &kernel[i * maskDim + 53], &kernel[i * maskDim + 54], &kernel[i * maskDim + 55], &kernel[i * maskDim + 56], &kernel[i * maskDim + 57], &kernel[i * maskDim + 58], &kernel[i * maskDim + 59], &kernel[i * maskDim + 60], &kernel[i * maskDim + 61], &kernel[i * maskDim + 62], &kernel[i * maskDim + 63], &kernel[i * maskDim + 64], &kernel[i * maskDim + 65], &kernel[i * maskDim + 66], &kernel[i * maskDim + 67], &kernel[i * maskDim + 68], &kernel[i * maskDim + 69], &kernel[i * maskDim + 70], &kernel[i * maskDim + 71], &kernel[i * maskDim + 72], &kernel[i * maskDim + 73], &kernel[i * maskDim + 74], &kernel[i * maskDim + 75], &kernel[i * maskDim + 76], &kernel[i * maskDim + 77], &kernel[i * maskDim + 78], &kernel[i * maskDim + 79], &kernel[i * maskDim + 80],  &kernel[i * maskDim + 81], &kernel[i * maskDim + 82], &kernel[i * maskDim + 83], &kernel[i * maskDim + 84], &kernel[i * maskDim + 85], &kernel[i * maskDim + 86], &kernel[i * maskDim + 87], &kernel[i * maskDim + 88], &kernel[i * maskDim + 89], &kernel[i * maskDim + 90], &kernel[i * maskDim + 91], &kernel[i * maskDim + 92], &kernel[i * maskDim + 93], &kernel[i * maskDim + 94], &kernel[i * maskDim + 95], &kernel[i * maskDim + 96], &kernel[i * maskDim + 97], &kernel[i * maskDim + 98], &kernel[i * maskDim + 99], &kernel[i * maskDim + 100], &kernel[i * maskDim + 101], &kernel[i * maskDim + 102], &kernel[i * maskDim + 103], &kernel[i * maskDim + 104], &kernel[i * maskDim + 105], &kernel[i * maskDim + 106], &kernel[i * maskDim + 107], &kernel[i * maskDim + 108], &kernel[i * maskDim + 109], &kernel[i * maskDim + 110], &kernel[i * maskDim + 111], &kernel[i * maskDim + 112], &kernel[i * maskDim + 113], &kernel[i * maskDim + 114], &kernel[i * maskDim + 115], &kernel[i * maskDim + 116], &kernel[i * maskDim + 117], &kernel[i * maskDim + 118], &kernel[i * maskDim + 119], &kernel[i * maskDim + 120], &kernel[i * maskDim + 122], &kernel[i * maskDim + 122], &kernel[i * maskDim + 123], &kernel[i * maskDim + 124], &kernel[i * maskDim + 125], &kernel[i * maskDim + 126]) != maskDim)
+            if (sscanf(buff, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f", &kernel[i * maskDim], &kernel[i * maskDim + 1], &kernel[i * maskDim + 2], &kernel[i * maskDim + 3], &kernel[i * maskDim + 4], &kernel[i * maskDim + 5], &kernel[i * maskDim + 6], &kernel[i * maskDim + 7], &kernel[i * maskDim + 8], &kernel[i * maskDim + 9], &kernel[i * maskDim + 10], &kernel[i * maskDim + 11], &kernel[i * maskDim + 12], &kernel[i * maskDim + 13], &kernel[i * maskDim + 14], &kernel[i * maskDim + 15], &kernel[i * maskDim + 16], &kernel[i * maskDim + 17], &kernel[i * maskDim + 18], &kernel[i * maskDim + 19], &kernel[i * maskDim + 20], &kernel[i * maskDim + 21], &kernel[i * maskDim + 22], &kernel[i * maskDim + 23], &kernel[i * maskDim + 24], &kernel[i * maskDim + 25], &kernel[i * maskDim + 26], &kernel[i * maskDim + 27], &kernel[i * maskDim + 28], &kernel[i * maskDim + 29], &kernel[i * maskDim + 30], &kernel[i * maskDim + 31], &kernel[i * maskDim + 32], &kernel[i * maskDim + 33], &kernel[i * maskDim + 34], &kernel[i * maskDim + 35], &kernel[i * maskDim + 36], &kernel[i * maskDim + 37], &kernel[i * maskDim + 38], &kernel[i * maskDim + 39], &kernel[i * maskDim + 40], &kernel[i * maskDim + 41], &kernel[i * maskDim + 42], &kernel[i * maskDim + 43], &kernel[i * maskDim + 44], &kernel[i * maskDim + 45], &kernel[i * maskDim + 46], &kernel[i * maskDim + 47], &kernel[i * maskDim + 48], &kernel[i * maskDim + 49], &kernel[i * maskDim + 50], &kernel[i * maskDim + 51], &kernel[i * maskDim + 52], &kernel[i * maskDim + 53], &kernel[i * maskDim + 54], &kernel[i * maskDim + 55], &kernel[i * maskDim + 56], &kernel[i * maskDim + 57], &kernel[i * maskDim + 58], &kernel[i * maskDim + 59], &kernel[i * maskDim + 60], &kernel[i * maskDim + 61], &kernel[i * maskDim + 62], &kernel[i * maskDim + 63], &kernel[i * maskDim + 64], &kernel[i * maskDim + 65], &kernel[i * maskDim + 66], &kernel[i * maskDim + 67], &kernel[i * maskDim + 68], &kernel[i * maskDim + 69], &kernel[i * maskDim + 70], &kernel[i * maskDim + 71], &kernel[i * maskDim + 72], &kernel[i * maskDim + 73], &kernel[i * maskDim + 74], &kernel[i * maskDim + 75], &kernel[i * maskDim + 76], &kernel[i * maskDim + 77], &kernel[i * maskDim + 78], &kernel[i * maskDim + 79], &kernel[i * maskDim + 80], &kernel[i * maskDim + 81], &kernel[i * maskDim + 82], &kernel[i * maskDim + 83], &kernel[i * maskDim + 84], &kernel[i * maskDim + 85], &kernel[i * maskDim + 86], &kernel[i * maskDim + 87], &kernel[i * maskDim + 88], &kernel[i * maskDim + 89], &kernel[i * maskDim + 90], &kernel[i * maskDim + 91], &kernel[i * maskDim + 92], &kernel[i * maskDim + 93], &kernel[i * maskDim + 94], &kernel[i * maskDim + 95], &kernel[i * maskDim + 96], &kernel[i * maskDim + 97], &kernel[i * maskDim + 98], &kernel[i * maskDim + 99], &kernel[i * maskDim + 100], &kernel[i * maskDim + 101], &kernel[i * maskDim + 102], &kernel[i * maskDim + 103], &kernel[i * maskDim + 104], &kernel[i * maskDim + 105], &kernel[i * maskDim + 106], &kernel[i * maskDim + 107], &kernel[i * maskDim + 108], &kernel[i * maskDim + 109], &kernel[i * maskDim + 110], &kernel[i * maskDim + 111], &kernel[i * maskDim + 112], &kernel[i * maskDim + 113], &kernel[i * maskDim + 114], &kernel[i * maskDim + 115], &kernel[i * maskDim + 116], &kernel[i * maskDim + 117], &kernel[i * maskDim + 118], &kernel[i * maskDim + 119], &kernel[i * maskDim + 120], &kernel[i * maskDim + 122], &kernel[i * maskDim + 122], &kernel[i * maskDim + 123], &kernel[i * maskDim + 124], &kernel[i * maskDim + 125], &kernel[i * maskDim + 126]) != maskDim)
             {
                 printf("Wrong input. Use -h or --help for more information\n");
                 free(buff);
@@ -112,7 +112,8 @@ int main(int argc, char **argv)
                 fclose(kernelFile);
                 return -1;
             }
-            else if (verbose){
+            else if (verbose)
+            {
                 for (int j = 0; j < maskDim; j++)
                     printf("%f ", kernel[i * maskDim + j]);
                 printf("\n");
@@ -188,7 +189,7 @@ int main(int argc, char **argv)
         printf("\nError: zoomLevel must be bigger than 0\n");
         return -1;
     }
-    
+
     // Check input file ends with .ppm
     if (std::string(argv[2]).size() < 4 || std::string(argv[2]).substr(std::string(argv[2]).size() - 4) != ".ppm")
     {
@@ -235,19 +236,21 @@ int main(int argc, char **argv)
     const size_t outPx = widthImgOut * heightImgOut * 3;
 
     // Check input image size
-    if(((unsigned int)(widthImgIn * heightImgIn * 3)) > INT32_MAX)
+    if (((unsigned int)(widthImgIn * heightImgIn * 3)) > INT32_MAX)
     {
         printf("\nError: input image too big\n"
-        "Width * Height * 3 must be less than %d\n", INT32_MAX);
+               "Width * Height * 3 must be less than %d\n",
+               INT32_MAX);
         destroyPPM(img);
         return -1;
     }
 
     // Check output image size
-    if(outPx > INT32_MAX)
+    if (outPx > INT32_MAX)
     {
         printf("\nError: output image too big\n"
-        "cutOutWidth * zoomLevel * cutOutHeight * zoomLevel * 3 must be less than %d\n", INT32_MAX);
+               "cutOutWidth * zoomLevel * cutOutHeight * zoomLevel * 3 must be less than %d\n",
+               INT32_MAX);
         destroyPPM(img);
         return -1;
     }
@@ -297,10 +300,9 @@ int main(int argc, char **argv)
     // Sets the maximum possible number of threads per block
     int widthTile = ((int)sqrt(prop.maxThreadsPerBlock) - (maskDim - 1));
     int heightTile = widthTile;
-    
+
     // Finds the best tiling if the mask doesn't occupy the whole tile(/block)
-    if (widthTile > 1) setTiling(widthImgOut, heightImgOut, &widthTile, &heightTile);
-    else widthTile = heightTile = 1;
+    (widthTile > 1) ? setTiling(widthImgOut, heightImgOut, &widthTile, &heightTile) : (void)(widthTile = heightTile = 1);
 
     if ((widthTile * heightTile != 1) && !forceGlobal)
     // TRUE: Tiling approach doable
@@ -309,14 +311,14 @@ int main(int argc, char **argv)
         dim3 usedThreads = dim3(widthTile + maskDim - 1, heightTile + maskDim - 1, 1);
         // Number of blocks
         dim3 usedBlocks = dim3(widthImgOut / widthTile, heightImgOut / heightTile, 3);
-        if(usedBlocks.x > prop.maxGridSize[0] || usedBlocks.y > prop.maxGridSize[1] || usedBlocks.z > prop.maxGridSize[2])
+        if (usedBlocks.x > prop.maxGridSize[0] || usedBlocks.y > prop.maxGridSize[1] || usedBlocks.z > prop.maxGridSize[2])
         {
             printf("\nError: Blocks overflow\n");
             cudaFree(d_start);
             cudaFree(d_out);
             return -1;
         }
-        
+
         // Bytes of shared memory per block
         size_t sharedMemSize = (widthTile + maskDim - 1) * (heightTile + maskDim - 1) * sizeof(char);
         if (sharedMemSize > prop.sharedMemPerBlock)
@@ -382,7 +384,7 @@ int main(int argc, char **argv)
         globalCudaUpscaling<<<usedBlocks, usedThreads>>>(d_start, d_out, widthImgIn, heightImgIn, widthImgOut, heightImgOut, maskDim, (pointX - (maskDim / 2 / zoomLevel)), (pointY - (maskDim / 2 / zoomLevel)), zoomLevel);
     }
     cudaDeviceSynchronize();
-    
+
     // Check for errors
     err = cudaGetLastError();
     if (err != cudaSuccess)
@@ -413,7 +415,7 @@ int main(int argc, char **argv)
 
     if (verbose)
         printf("Output file written\n"
-            "\nEND OF THE PROGRAM\n\n");
+               "\nEND OF THE PROGRAM\n\n");
 
     return 0;
 }

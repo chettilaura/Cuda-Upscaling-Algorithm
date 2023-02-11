@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.3) (preloaded format=pdflatex 2022.5.24)  7 FEB 2023 13:01
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.3) (preloaded format=pdflatex 2022.5.24)  11 FEB 2023 18:18
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -420,24 +420,24 @@ File: l3backend-pdftex.def 2022-04-20 L3 backend support: PDF output (pdfTeX)
 ) (main.aux)
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
  (C:\Users\nicol\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count336
@@ -491,7 +491,7 @@ File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-Package hyperref Info: Link coloring OFF on input line 31.
+Package hyperref Info: Link coloring OFF on input line 54.
 (C:\Users\nicol\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
 Package: nameref 2022-05-13 v2.48 Cross-referencing by name of section
  (C:\Users\nicol\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty
@@ -512,10 +512,10 @@ Package: ltcaption 2021/01/08 v1.4c longtable captions (AR)
 )
 Package caption Info: End \AtBeginDocument code.
 \c@lstlisting=\count343
-<img/polito.png, id=43, 3079.505pt x 2260.445pt>
+<img/polito.png, id=47, 3079.505pt x 2260.445pt>
 File: img/polito.png Graphic file (type png)
 <use img/polito.png>
-Package pdftex.def Info: img/polito.png  used on input line 44.
+Package pdftex.def Info: img/polito.png  used on input line 67.
 (pdftex.def)             Requested size: 307.96854pt x 226.05774pt.
  [1
 
@@ -527,40 +527,76 @@ Package pdftex.def Info: img/polito.png  used on input line 44.
 pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.58 \clearpage
+l.81 \clearpage
                 [1] (0_abstract.tex) [2
 
-] (1_related_works.tex) [3] (2_proposed_method.tex
-Underfull \hbox (badness 10000) in paragraph at lines 30--33
+] (1_related_works.tex) [3] (2_proposed_method.tex (C:\Users\nicol\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstlang1.sty
+File: lstlang1.sty 2020/03/24 1.8d listings language file
+) (C:\Users\nicol\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstlang1.sty
+File: lstlang1.sty 2020/03/24 1.8d listings language file
+) [4] (C:\Users\nicol\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstlang1.sty
+File: lstlang1.sty 2020/03/24 1.8d listings language file
+) (C:\Users\nicol\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstmisc.sty
+File: lstmisc.sty 2020/03/24 1.8d (Carsten Heinz)
+)
+Underfull \hbox (badness 10000) in paragraph at lines 89--92
 
  []
 
-[4]
-Underfull \hbox (badness 10000) in paragraph at lines 46--49
+[5]
+Underfull \hbox (badness 10000) in paragraph at lines 137--140
 
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 51--63
-
+<img/EDGEscheme.png, id=129, 1495.77pt x 1121.28pt>
+File: img/EDGEscheme.png Graphic file (type png)
+<use img/EDGEscheme.png>
+Package pdftex.def Info: img/EDGEscheme.png  used on input line 143.
+(pdftex.def)             Requested size: 339.72592pt x 254.67242pt.
+[6]
+Overfull \hbox (16.76451pt too wide) in paragraph at lines 168--172
+[]\OT1/cmr/m/n/10.95 The ba-sic ver-sion of the al-go-rithm, us-ing a ker-nel on CPU ac-cord-ing to the \OT1/cmr/m/it/10.95 Gaus-sian[]Kernel[]Cpu
  []
 
-[5]) [6] (3_experimental_results.tex) [7] (4_conclusions.tex) [8] (main.aux)
+[7 <./img/EDGEscheme.png>]
+<img/scheme.png, id=170, 1495.77pt x 1121.28pt>
+File: img/scheme.png Graphic file (type png)
+<use img/scheme.png>
+Package pdftex.def Info: img/scheme.png  used on input line 195.
+(pdftex.def)             Requested size: 452.9679pt x 339.55182pt.
+ [8 <./img/scheme.png>]
+<img/flowchart.png, id=188, 597.432pt x 845.0772pt>
+File: img/flowchart.png Graphic file (type png)
+<use img/flowchart.png>
+Package pdftex.def Info: img/flowchart.png  used on input line 208.
+(pdftex.def)             Requested size: 317.07614pt x 448.52063pt.
+) [9 <./img/flowchart.png>] (3_experimental_results.tex
+<img/start/sample640x426.jpg, id=195, 642.4pt x 427.5975pt>
+File: img/start/sample640x426.jpg Graphic file (type jpg)
+<use img/start/sample640x426.jpg>
+Package pdftex.def Info: img/start/sample640x426.jpg  used on input line 4.
+(pdftex.def)             Requested size: 226.48395pt x 150.75096pt.
+<img/start/selectedZoneCutout.jpg, id=196, 5018.75pt x 5018.75pt>
+File: img/start/selectedZoneCutout.jpg Graphic file (type jpg)
+<use img/start/selectedZoneCutout.jpg>
+Package pdftex.def Info: img/start/selectedZoneCutout.jpg  used on input line 10.
+(pdftex.def)             Requested size: 226.48395pt x 226.44664pt.
+) [10 <./img/start/sample640x426.jpg> <./img/start/selectedZoneCutout.jpg>] (4_conclusions.tex) [11] (main.aux)
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 6B6E017EE046C44BD10B1C6878468DA4;1560.
+(rerunfilecheck)             Checksum: 7C38142A4F3C51AFA46265C4559B3461;1716.
  ) 
 Here is how much of TeX's memory you used:
- 14526 strings out of 478614
- 235645 string characters out of 2843122
- 559236 words of memory out of 3000000
- 32457 multiletter control sequences out of 15000+600000
- 475776 words of font info for 50 fonts, out of 8000000 for 9000
+ 15204 strings out of 478614
+ 243695 string characters out of 2843122
+ 881900 words of memory out of 3000000
+ 33039 multiletter control sequences out of 15000+600000
+ 477420 words of font info for 57 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 60i,7n,63p,385b,368s stack positions out of 10000i,1000n,20000p,200000b,80000s
- <C:\Users\nicol\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1200.pk><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.pfb>
-Output written on main.pdf (9 pages, 421501 bytes).
+ 60i,7n,63p,384b,1252s stack positions out of 10000i,1000n,20000p,200000b,80000s
+ <C:\Users\nicol\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1200.pk><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on main.pdf (12 pages, 2871609 bytes).
 PDF statistics:
- 144 PDF objects out of 1000 (max. 8388607)
- 21 named destinations out of 1000 (max. 500000)
- 86 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 288 PDF objects out of 1000 (max. 8388607)
+ 98 named destinations out of 1000 (max. 500000)
+ 119 words of extra memory for PDF output out of 10000 (max. 10000000)
 

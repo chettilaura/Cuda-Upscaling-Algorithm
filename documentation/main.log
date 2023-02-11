@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.3) (preloaded format=pdflatex 2022.5.24)  11 FEB 2023 18:18
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.3) (preloaded format=pdflatex 2022.5.24)  11 FEB 2023 18:33
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -562,21 +562,26 @@ Overfull \hbox (16.76451pt too wide) in paragraph at lines 168--172
 <img/scheme.png, id=170, 1495.77pt x 1121.28pt>
 File: img/scheme.png Graphic file (type png)
 <use img/scheme.png>
-Package pdftex.def Info: img/scheme.png  used on input line 195.
-(pdftex.def)             Requested size: 452.9679pt x 339.55182pt.
- [8 <./img/scheme.png>]
-<img/flowchart.png, id=188, 597.432pt x 845.0772pt>
+Package pdftex.def Info: img/scheme.png  used on input line 196.
+(pdftex.def)             Requested size: 317.07614pt x 237.68285pt.
+<img/threadsscheme.png, id=171, 1495.77pt x 1121.28pt>
+File: img/threadsscheme.png Graphic file (type png)
+<use img/threadsscheme.png>
+Package pdftex.def Info: img/threadsscheme.png  used on input line 197.
+(pdftex.def)             Requested size: 226.48395pt x 169.77591pt.
+ [8 <./img/scheme.png> <./img/threadsscheme.png>]
+<img/flowchart.png, id=181, 597.432pt x 845.0772pt>
 File: img/flowchart.png Graphic file (type png)
 <use img/flowchart.png>
-Package pdftex.def Info: img/flowchart.png  used on input line 208.
+Package pdftex.def Info: img/flowchart.png  used on input line 210.
 (pdftex.def)             Requested size: 317.07614pt x 448.52063pt.
 ) [9 <./img/flowchart.png>] (3_experimental_results.tex
-<img/start/sample640x426.jpg, id=195, 642.4pt x 427.5975pt>
+<img/start/sample640x426.jpg, id=188, 642.4pt x 427.5975pt>
 File: img/start/sample640x426.jpg Graphic file (type jpg)
 <use img/start/sample640x426.jpg>
 Package pdftex.def Info: img/start/sample640x426.jpg  used on input line 4.
 (pdftex.def)             Requested size: 226.48395pt x 150.75096pt.
-<img/start/selectedZoneCutout.jpg, id=196, 5018.75pt x 5018.75pt>
+<img/start/selectedZoneCutout.jpg, id=189, 5018.75pt x 5018.75pt>
 File: img/start/selectedZoneCutout.jpg Graphic file (type jpg)
 <use img/start/selectedZoneCutout.jpg>
 Package pdftex.def Info: img/start/selectedZoneCutout.jpg  used on input line 10.
@@ -586,17 +591,17 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 7C38142A4F3C51AFA46265C4559B3461;1716.
  ) 
 Here is how much of TeX's memory you used:
- 15204 strings out of 478614
- 243695 string characters out of 2843122
+ 15196 strings out of 478614
+ 243666 string characters out of 2843122
  881900 words of memory out of 3000000
  33039 multiletter control sequences out of 15000+600000
  477420 words of font info for 57 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  60i,7n,63p,384b,1252s stack positions out of 10000i,1000n,20000p,200000b,80000s
  <C:\Users\nicol\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1200.pk><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/nicol/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on main.pdf (12 pages, 2871609 bytes).
+Output written on main.pdf (12 pages, 3062578 bytes).
 PDF statistics:
- 288 PDF objects out of 1000 (max. 8388607)
- 98 named destinations out of 1000 (max. 500000)
- 119 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 279 PDF objects out of 1000 (max. 8388607)
+ 89 named destinations out of 1000 (max. 500000)
+ 124 words of extra memory for PDF output out of 10000 (max. 10000000)
 

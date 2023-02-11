@@ -169,15 +169,16 @@ else
     allocated in the constant memory, computes the convolution using one thread for each pixel of the image, dividing the image in blocks all of the same size, excluding the last, 
     which can be smaller. The convolution is performed both per color channel and per single block of pixels of the same dimension of the kernel, centered in the pixel to be processed.
     The convolution is performed by multiplying the value of the pixel with the value of the corresponding element of the kernel, and then summing all the results:
-    \noindent\begin{lstlisting}[language=C]
-...
-offsetRow = (idx / dimImgIn + i) * dimImgIn;
-offsetCol = idx % dimImgIn + j;
-sum += input[offsetRow + offsetCol + 3] * d_kernel[i * dimKernel + j];
-...
-output[idx] = sum;
-...
-    \end{lstlisting}
+
+%     \noindent\begin{lstlisting}[language=C]
+% ...
+% offsetRow = (idx / dimImgIn + i) * dimImgIn;
+% offsetCol = idx % dimImgIn + j;
+% sum += input[offsetRow + offsetCol + 3] * d_kernel[i * dimKernel + j];
+% ...
+% output[idx] = sum;
+% ...
+%     \end{lstlisting}
 
     The second version, with shared memory and tiling, decides if the image is large enough to be tiled by computing the width of the tile:
     \begin{equation}
@@ -188,11 +189,12 @@ output[idx] = sum;
     due to the overhead of the tiling process.
     The shared memory has to be filled first with the color information of the image, then used to perform the convolution with the mask.
     All the initialized threads of the block participate in filling the memory but afterwards only some of them participate in calculating the convolution with the mask for that block.
-    The number of threads set for each block corresponds to the number of bytes allocated for the shared memory: in the project it is set to $bigTileDim*bigTileDim$.
+    The number of threads set for each block corresponds to the number of bytes allocated for the shared memory: in the project it is set to $bigTileDimX*bigTileDimY$.
 
     \begin{figure}
         \centering
-        \includegraphics[width=1\textwidth]{img/scheme.png}
+        \includegraphics[width=0.7\textwidth]{img/scheme.png}
+        \includegraphics[width=0.5\textwidth]{img/threadsscheme.png}
         \caption{Schematic representation of enhancement process}
         \label{fig:tiling}
     \end{figure}

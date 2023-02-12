@@ -831,6 +831,13 @@ INPUT .\3_experimental_results.tex
 INPUT 3_experimental_results.tex
 INPUT .\3_experimental_results.tex
 INPUT 3_experimental_results.tex
+INPUT .\img\jetson-nano.png
+INPUT .\img\jetson-nano.png
+INPUT img\jetson-nano.png
+INPUT .\img\jetson-nano.png
+INPUT .\img\jetson-nano.png
+INPUT .\img\jetson-nano.png
+INPUT .\img\jetson-nano.png
 INPUT .\img\start\sample640x426.jpg
 INPUT .\img\start\sample640x426.jpg
 INPUT img\start\sample640x426.jpg

@@ -12,7 +12,7 @@ The algorithm works in successive stages as described in the following:
     \item Image enhancement
 \end{itemize}
 
-The algorithm is implemented in C++ and CUDA, it is divided into two parts: the first one focuses on the CPU, which is responsible for the reading of the image
+The algorithm is divided into two parts: the first one focuses on the CPU, which is responsible for the reading of the image
 and the kernel loading; the second one is the GPU part, which is responsible for the image cut out, enlargement, filling, and enhancement.
 The inputs required by the application are based on the commands given by the user through the command line, and they are the following:
 \begin{itemize}

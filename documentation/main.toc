@@ -9,4 +9,6 @@
 \contentsline {subsection}{\numberline {2.4}Image Enhancement}{7}{subsection.2.4}%
 \contentsline {subsection}{\numberline {2.5}Code implementation}{9}{subsection.2.5}%
 \contentsline {section}{\numberline {3}Experimental Results}{10}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Experimental setup}{10}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Changes}{10}{subsection.3.2}%
 \contentsline {section}{\numberline {4}Conclusions}{11}{section.4}%

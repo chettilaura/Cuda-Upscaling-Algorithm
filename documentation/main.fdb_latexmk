@@ -1,9 +1,9 @@
 # Fdb version 3
-["pdflatex"] 1676136806 "c:/Users/nicol/Desktop/PoliTo/Y2S1/GPU/Cuda_SS/documentation/main.tex" "main.pdf" "main" 1676136811
+["pdflatex"] 1676200987 "c:/Users/nicol/Desktop/PoliTo/Y2S1/GPU/Cuda_SS/documentation/main.tex" "main.pdf" "main" 1676200999
   "0_abstract.tex" 1676126448 892 6566c24238bbf74cf509fea1279f36d9 ""
   "1_related_works.tex" 1676127332 1646 6a9b768794af6e2beabc534e90fe304b ""
-  "2_proposed_method.tex" 1676136800 13371 de480cd4a0066a9a888f3e1f9e19d7f1 ""
-  "3_experimental_results.tex" 1676135700 334 ccf8bae949aa8924191473fdcc00c6f4 ""
+  "2_proposed_method.tex" 1676197919 13336 cd82d66dfc376b2143e0cbb836d68543 ""
+  "3_experimental_results.tex" 1676200986 4689 9fdf2d29080932240a7cf0796b7eed47 ""
   "4_conclusions.tex" 1676134024 1247 31bdfd609c580abaf3baa07545073b7b ""
   "C:/Users/nicol/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1675600851 80909 eab91d9745dd2edfd62a31d53cd5fe15 ""
   "C:/Users/nicol/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1200.pk" 1650386901 14064 8ac9488924f58d7e700f589074fc86dc ""
@@ -117,15 +117,16 @@
   "c:/Users/nicol/Desktop/PoliTo/Y2S1/GPU/Cuda_SS/documentation/main.tex" 1676125535 2337 a3559e9b640bf43aabc87155b803ae09 ""
   "img/EDGEscheme.png" 1676131561 644178 abb64c67644198b1fd0de7b82165a3a8 ""
   "img/flowchart.png" 1676135746 361138 9756b297fbb5365e3c022f52539290b2 ""
+  "img/jetson-nano.png" 1676197597 598373 a95845245b5842cdf753a707a4e63cfd ""
   "img/polito.png" 1668612461 509956 8d4b97bb55f684707f495262ed32262e ""
   "img/scheme.png" 1676125749 935591 48d844dee6a94920b30774f26eeaa5bc ""
   "img/start/sample640x426.jpg" 1676135163 78378 f12858f60b14859eabf7a6fce7bdf866 ""
   "img/start/selectedZoneCutout.jpg" 1676135163 767125 e2fb990a6ac95e89e0489f5cafb5dd6c ""
-  "img/threadsscheme.png" 1676136337 259843 0d968fed9fe9622885ecf23bf6cae65d ""
-  "main.aux" 1676136811 3170 a7da6550c4a076b17c12b8f28f6c5f98 "pdflatex"
-  "main.out" 1676136811 1716 7c38142a4f3c51afa46265c4559b3461 "pdflatex"
+  "img/threadsscheme.png" 1676195094 307295 f16055b0df77209000eca39cb3228292 ""
+  "main.aux" 1676200998 3828 be1c64290aa63b161e18cf0e76b26478 "pdflatex"
+  "main.out" 1676200998 1960 4bcd90fb0643c8f3c75825e16f287a37 "pdflatex"
   "main.tex" 1676125535 2337 a3559e9b640bf43aabc87155b803ae09 ""
-  "main.toc" 1676136811 937 0a43cc7cf8c4a22b4d71909e7a543930 "pdflatex"
+  "main.toc" 1676200998 1096 c228d811c9687f8900831340caa01583 "pdflatex"
   (generated)
   "main.aux"
   "main.log"

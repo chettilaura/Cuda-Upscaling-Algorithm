@@ -3,8 +3,8 @@
 *.exe
 *.exp
 *.lib
-output.ppm
-DEBUG*.ppm
+output.*
+DEBUG*
 
 # Vscode settings
 .vscode

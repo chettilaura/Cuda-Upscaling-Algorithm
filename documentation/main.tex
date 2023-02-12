@@ -80,7 +80,7 @@
 \tableofcontents
 \clearpage
 
-
+\addcontentsline{toc}{section}{Abstract}
 \input{0_abstract.tex}
 \newpage
 \input{1_related_works.tex}
@@ -90,5 +90,9 @@
 \input{3_experimental_results.tex}
 \newpage
 \input{4_conclusions.tex}
+\newpage
+\addcontentsline{toc}{section}{References}
+\bibliographystyle{IEEEtran}
+\bibliography{biblio.bib}
 
 \end{document}

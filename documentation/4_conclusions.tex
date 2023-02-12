@@ -1,19 +1,17 @@
 \section{Conclusions}
 
-In this paper we proposed a technique for both zooming and enhancing a digital picture by utilizing GPU parallelism.
+In this paper a technique for both zooming and enhancing a digital picture by utilizing GPU parallelism is proposed.
 
-When we first implemented the CPU version of the algorithm parallelization was not achieved in the workload, then
-we came up with a first non-optimized implementation on the GPU: at the end we succeeded in enhancing the procedure by working on its bottlenecks 
+When the first CPU version of the algorithm was implemented parallelization was not achieved in the workload. 
+A first non-optimized implementation on the GPU was then used: at the end of the procedure the program was enhanced by working on its bottlenecks 
 like memory reading for the data transfer.
 
-Concerning the employment of the shared memory for the tiling process, we observed complete absence of memory access conflicts: 
-GPUs with a computer capability greater than 2.0 are able to avoid conflicts in our scenario. 
+Concerning the employment of the shared memory for the tiling process, a complete absence of memory access conflicts was observed: 
+GPUs with a computer capability greater than 2.0 are able to avoid conflicts in this scenario. 
+This is due to the fact that shared Memory sends data in broadcast to all the threads accessing the same memory location.
 
-From a future perspective, within the overall Upscaling algorithm implemented, the section concerning the zoom algorithm can certainly be optimized: 
-we utilized a basic algorithm that simply replicates the adjacent pixels but for example, 
-it could be used another type of algorithm able to interpolate the color values instead of replicating the already existing ones.
+In a future perspective, within the overall Upscaling algorithm implemented, the section concerning the zoom algorithm can certainly be optimized: 
+a basic algorithm that simply replicates the adjacent pixels was utilized but, for example
+another type of algorithm could be used, able to interpolate the color values instead of replicating the already existing ones.
 If the CUDA Runtime API gets updated to support vectors in global memory of size greater than \textit{MAX32\_INT} 
 then the algorithm can be easily extended to work on bigger images.
-
-
-

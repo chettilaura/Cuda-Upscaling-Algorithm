@@ -1,4 +1,5 @@
 \babel@toc {english}{}\relax 
+\contentsline {section}{Abstract}{2}{figure.caption.1}%
 \contentsline {section}{\numberline {1}Related works}{3}{section.1}%
 \contentsline {subsection}{\numberline {1.1}The Pixel Replication Algorithm}{3}{subsection.1.1}%
 \contentsline {subsection}{\numberline {1.2}Image Filtering Convolution Algorithm}{3}{subsection.1.2}%
@@ -7,8 +8,11 @@
 \contentsline {subsection}{\numberline {2.2}Image Cut-Out}{5}{subsection.2.2}%
 \contentsline {subsection}{\numberline {2.3}Image Enlargement and Filling}{6}{subsection.2.3}%
 \contentsline {subsection}{\numberline {2.4}Image Enhancement}{7}{subsection.2.4}%
-\contentsline {subsection}{\numberline {2.5}Code implementation}{9}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.5}Code implementation}{8}{subsection.2.5}%
 \contentsline {section}{\numberline {3}Experimental Results}{10}{section.3}%
 \contentsline {subsection}{\numberline {3.1}Experimental setup}{10}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}Changes}{10}{subsection.3.2}%
-\contentsline {section}{\numberline {4}Conclusions}{11}{section.4}%
+\contentsline {subsection}{\numberline {3.2}Program's history}{10}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Results comparison}{10}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Using custom kernel masks}{11}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Conclusions}{14}{section.4}%
+\contentsline {section}{References}{15}{section.4}%

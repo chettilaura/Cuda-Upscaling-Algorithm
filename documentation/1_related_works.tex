@@ -1,13 +1,13 @@
 \section{Related works}
 
     \subsection{The Pixel Replication Algorithm}
-    In our implementation of the zooming algorithm we develop the GPU version of the already existing algorithm named “Pixel replication” also known as the “Nearest neighbor interpolation”.
+    The GPU version of the already existing algorithm named “Pixel replication” \cite{zoom_meth} (also known as the “Nearest neighbor interpolation”) is developed in the proposed implementation of the zooming algorithm.
     As its name suggests, it replicates the neighboring pixels to increase them in order to enlarge the image: it creates new pixels from the already given ones replicating each pixel “n” times row wise and column wise.
-    This Algorithm has the advantage of being a very simple technique to implement zooming but, on the other hand, as the zooming factor increases the resulting image gets more blurred.
+    This Algorithm has the advantage of being a very simple technique to implement zooming but, on the other hand, as the zooming factor increases the resulting image gets worse.
 
 
     \subsection{Image Filtering Convolution Algorithm}
-    For the purpose of improving the visual quality of the zoomed image we implement an image filtering algorithm based on the convolution operation, that can be applied to reduce the amount of unwanted noise. 
-    In order to implement the convolution between the zoomed image and a specified filter, we manipulate the already known version of the “Image filtering through convolution” Algorithm.
+    For the purpose of improving the visual quality of the zoomed image it is implemented an image filtering algorithm based on the convolution operation \cite{conv_slides}, that can be applied to reduce the amount of unwanted noise. 
+    In order to implement the convolution between the zoomed image and a specified filter, the already known version of the “Image filtering through convolution” algorithm is adapted.
     In the original CPU implementation of the algorithm the convolution operation is performed by sliding the mask onto every pixel of the image using a double loop while simultaneously iterating over every element of the kernel mask for each pixel, making use of another double loop.
-    The basic algorithm implements the convolution operation in a simple but unoptimized approach that can be improved, for example by exploiting the GPU parallelism concurrently with the tiling technique. 
+    The basic algorithm implements the convolution operation in a simple but unoptimized approach that can be improved, for example by exploiting the GPU parallelism concurrently with the tiling technique \cite{tiled_conv_slides}. 

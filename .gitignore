@@ -3,9 +3,8 @@
 *.exe
 *.exp
 *.lib
-output.*
+output*
 DEBUG*
-
 # Vscode settings
 .vscode
 

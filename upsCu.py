@@ -1,8 +1,6 @@
 import cv2
-import numpy as np
 import sys
-import time
-from time import sleep
+import os
 
 # # This will display all the available mouse click events
 # events = [i for i in dir(cv2) if 'EVENT' in i]
@@ -14,8 +12,6 @@ evt_cnt = 0
 img = cv2.imread("./sample640x426.ppm")
 
 # click event function
-
-
 def click_event(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         print(x, ",", y)
@@ -44,6 +40,7 @@ def cb_set(imagePath):
         cv2.waitKey(1)
     #cv2.waitKey(0)
     cv2.destroyAllWindows()
+    
 
 def cb_get(args):
     print(refPt[0], refPt[1])
@@ -71,6 +68,7 @@ def cb_get(args):
             return
         syscall = "./upsCu.exe " + flags + " " + imagePath + " " + str(cutOutCenterX) + " " + str(cutOutCenterY) + " " + str(cutOutWidth) + " " + str(cutOutHeight) + " " + zoomLevel + " " + inputKernel
     print(syscall)
+    os.system(syscall)
 
 def main():
     args = sys.argv

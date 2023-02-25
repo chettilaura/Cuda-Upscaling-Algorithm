@@ -1,6 +1,7 @@
 import cv2
 import sys
 import os
+from time import sleep
 
 # # This will display all the available mouse click events
 # events = [i for i in dir(cv2) if 'EVENT' in i]
@@ -57,7 +58,7 @@ def cb_get(args):
         if flags.find("g") == -1:
             print("Error: gaussLength and gaussSigma are only valid if the g flag is set")
             return
-        syscall = "./upsCu.exe " + flags + " " + imagePath + " " + " " + str(cutOutCenterX) + " " + str(cutOutCenterY) + " " + str(cutOutWidth) + " " + str(cutOutHeight) + " " + zoomLevel + " " + gaussLength + " " + gaussSigma
+        syscall = "upsCu.exe " + flags + " " + imagePath + " " + " " + str(cutOutCenterX) + " " + str(cutOutCenterY) + " " + str(cutOutWidth) + " " + str(cutOutHeight) + " " + zoomLevel + " " + gaussLength + " " + gaussSigma
     elif len(args) == 5:
         imagePath = args[1]
         flags = args[2]
@@ -66,9 +67,10 @@ def cb_get(args):
         if flags.find("c") == -1:
             print("Error: inputKernel is only valid if the c flag is set")
             return
-        syscall = "./upsCu.exe " + flags + " " + imagePath + " " + str(cutOutCenterX) + " " + str(cutOutCenterY) + " " + str(cutOutWidth) + " " + str(cutOutHeight) + " " + zoomLevel + " " + inputKernel
+        syscall = "upsCu.exe " + flags + " " + imagePath + " " + str(cutOutCenterX) + " " + str(cutOutCenterY) + " " + str(cutOutWidth) + " " + str(cutOutHeight) + " " + zoomLevel + " " + inputKernel
     print(syscall)
     os.system(syscall)
+    sleep(5000)
 
 def main():
     args = sys.argv
